@@ -160,7 +160,8 @@ fieldset .radios + input {{ margin-top:8px; }}
 body:has(.login) {{ background:linear-gradient(to bottom, var(--bg), color-mix(in srgb, var(--accent) 15%, var(--bg))) fixed; }}
 main:has(.login) {{ padding-bottom:24px; }}
 .login {{ min-height:calc(100dvh - 24px); max-width:420px; margin:0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; }}
-.login img {{ border-radius:16px; }} .login h1 {{ flex:none; margin:12px 0 4px; text-align:center; }} .login .card {{ width:100%; }}
+.login h1 {{ flex:none; display:flex; justify-content:center; margin:0 0 16px; }}
+.login .brand {{ gap:12px; }} .login .brand svg {{ width:44px; height:44px; }} .login .brand-name {{ font-size:2rem; }} .login .card {{ width:100%; }}
 </style></head><body><main>{body}</main></body></html>"""
 
 
@@ -203,7 +204,7 @@ def login():
     if not USERS:
         error = "Вхід ще не налаштовано: на сервері немає хешів паролів (make_env.py)."
     return page("Вхід", f"""
-<div class="login"><img src="/static/icon-192.png" alt="" width="64" height="64"><h1>Наші фінанси</h1>
+{report.SPLASH}<div class="login"><h1>{report.BRAND}</h1>
 <section class="card"><form method="post">
 <input type="hidden" name="csrf" value="{csrf_token()}">
 {error_html(error)}
