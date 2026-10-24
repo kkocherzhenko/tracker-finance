@@ -3,6 +3,7 @@
 `uv run python report.py` пише report.html (без інтернету, відкривається в браузері).
 Веб-застосунок (app.py) викликає render() на кожен запит, тож звіт завжди свіжий.
 """
+import calendar
 import csv
 import json
 import math
@@ -287,20 +288,42 @@ def limits_banner(rows):
     return f'<p class="alert" role="alert"><b>Увага, ліміти.</b> {" · ".join(hot)}</p>' if hot else ""
 
 
-def block_limits(rows, view, viewer, settings_url):
+GAUGE = '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'
+STATE = {"fine": "В нормі", "near": "Близько", "over": "Перевищено"}
+
+
+def empty(title, svg, text, action=""):
+    """Порожня картка: іконка, одне речення і дія, якщо є."""
+    return (f'<section class="card empty"><h2>{title}</h2><svg viewBox="0 0 24 24" aria-hidden="true">{svg}</svg>'
+            f'<p>{text}</p>{action}</section>')
+
+
+def block_limits(rows, view, viewer, settings_url, last=None):
+    """last — остання дата даних неповного місяця: тоді показуємо позначку «сьогодні» і скільки можна на день."""
     if viewer and view not in ("Разом", viewer):
         return f'<section class="card"><h2>Ліміти</h2><p class="verdict">Ліміти {view} бачить лише {view}.</p></section>'
-    link = f' <a href="{settings_url}">Налаштувати ліміти</a>' if settings_url else ""
     if not rows:
-        return f'<section class="card"><h2>Ліміти</h2><p class="verdict">Лімітів ще немає.{link}</p></section>'
-    items = "".join(
-        f'<div class="limit {level(s, l)[0]}"><div class="lhead"><span>{escape(n)}</span>'
-        f'<span>{zl(s, 0)} з {zl(l, 0)}</span></div>'
-        f'<span class="ltrack"><span class="lbar" style="width:{min(s / l * 100, 100) if l else 100:.1f}%"></span></span>'
-        f'<small>{level(s, l)[1]}</small></div>'
-        for n, s, l in rows
-    )
-    return f'<section class="card"><h2>Ліміти на місяць</h2>{items}<p class="foot">{link}</p></section>'
+        action = f'<a class="btn" href="{settings_url}">Задати ліміт</a>' if settings_url else ""
+        return empty("Ліміти", GAUGE, "Лімітів ще немає.", action)
+    days = calendar.monthrange(last.year, last.month)[1] if last else 0
+    tick = f'<i class="today" style="left:{last.day / days * 100:.1f}%" title="сьогодні"></i>' if last else ""
+    items = []
+    for n, spent, limit in rows:
+        state = level(spent, limit)[0]
+        if spent > limit:
+            note = f"перевищено на {zl(spent - limit, 0)}"
+        else:
+            note = f"Лишилось {zl(limit - spent, 0)}"
+            if last and days > last.day:
+                note += f" · ≈ {zl((limit - spent) / (days - last.day), 0)}/день"
+        items.append(
+            f'<div class="limit {state}"><div class="lhead"><span>{escape(n)} <span class="lchip">{STATE[state]}</span></span>'
+            f'<span>{zl(spent, 0)} з {zl(limit, 0)}</span></div>'
+            f'<span class="ltrack"><span class="lbar" style="width:{min(spent / limit * 100, 100) if limit else 100:.1f}%"></span>{tick}</span>'
+            f'<small>{note}</small></div>'
+        )
+    link = f'<p class="foot"><a href="{settings_url}">Налаштувати ліміти</a></p>' if settings_url else ""
+    return f'<section class="card"><h2>Ліміти на місяць</h2>{"".join(items)}{link}</section>'
 
 
 def block_cash(d, key, view):
@@ -384,9 +407,15 @@ h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600
 .legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-size:.9rem; color:var(--text-muted); }
 .sw { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; } .legend b { color:var(--text); font-weight:600; }
 .limit { padding:14px 0; border-bottom:1px solid var(--border); } .limit:last-of-type { border-bottom:0; }
-.lhead { display:flex; justify-content:space-between; gap:8px; } .lhead span:last-child { font-weight:600; white-space:nowrap; }
-.ltrack { display:block; height:8px; background:var(--border); border-radius:4px; margin:8px 0 4px; overflow:hidden; }
-.lbar { display:block; height:100%; border-radius:4px; } .fine .lbar { background:var(--positive); } .near .lbar { background:var(--warning); } .over .lbar { background:var(--negative); }
+.lhead { display:flex; justify-content:space-between; align-items:center; gap:8px; } .lhead > span:last-child { font-weight:600; white-space:nowrap; }
+.lchip { display:inline-block; margin-left:4px; padding:1px 8px; border-radius:999px; font-size:.72rem; font-weight:600; vertical-align:1px; }
+.fine .lchip { background:color-mix(in srgb, var(--positive) 14%, var(--surface)); } .near .lchip { background:var(--warning-soft); } .over .lchip { background:var(--negative-soft); }
+.ltrack { position:relative; display:block; height:10px; background:var(--border); border-radius:5px; margin:8px 0 4px; }
+.today { position:absolute; top:-3px; width:2px; height:16px; margin-left:-1px; background:var(--text); border-radius:1px; }
+.lbar { display:block; height:100%; border-radius:5px; transform-origin:left; animation:grow .4s ease-out; }
+@keyframes grow { from { transform:scaleX(0); } }
+.empty { text-align:center; } .empty h2 { text-align:left; } .empty > svg { width:40px; height:40px; margin:8px auto 0; fill:none; stroke:var(--accent); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; } .empty p { margin:8px 0 16px; }
+@media (prefers-reduced-motion: reduce) { *:not(.flash) { animation:none !important; transition:none !important; } } .fine .lbar { background:var(--positive); } .near .lbar { background:var(--warning); } .over .lbar { background:var(--negative); }
 .over small { color:var(--negative); font-weight:600; }
 .verdict { margin:16px 0 0; }
 a { color:var(--accent-strong); }
@@ -438,7 +467,7 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
                 f'<div data-s="spend">{block_categories(d, k, v, partial)}{block_cash(d, k, v)}</div>'
                 f'<div data-s="save" hidden>{block_savings(d, k, v, partial, v == other)}</div>'
                 f'<div data-s="fixed" hidden>{block_fixed(d, k, v)}</div>'
-                f'<div data-s="limits" hidden>{block_limits(rows, v, viewer, settings_url)}</div></div>'
+                f'<div data-s="limits" hidden>{block_limits(rows, v, viewer, settings_url, d["last_day"][k] if partial else None)}</div></div>'
             )
     flash_html = f'<p class="flash" role="status">{flash}</p>' if flash else ""
     return f"""<!doctype html>
