@@ -114,7 +114,7 @@ HEAD = """
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/static/icon-192.png">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-<meta name="theme-color" content="#fcfcfa">
+<meta name="theme-color" content="#e9eff3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Фінанси">
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>"""
@@ -126,20 +126,21 @@ def page(title, body):
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{title}</title>{HEAD}
 <style>{report.CSS}
-form .field {{ display:block; margin:0 0 20px; }} form .field > span {{ display:block; color:var(--ink2); font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; margin-bottom:6px; }}
-input, select {{ font:inherit; font-size:1.05rem; width:100%; min-height:52px; padding:12px 18px; border-radius:16px; border:1px solid transparent; background:var(--field); color:var(--ink); }}
-input:focus, select:focus {{ outline:none; border-color:var(--ink); background:var(--card); }}
-select {{ -webkit-appearance:none; appearance:none; padding-right:44px; background:var(--field) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%2370757d' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 18px center; }}
+form .field {{ display:block; margin:0 0 20px; }} form .field > span {{ display:block; color:var(--text-muted); font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; margin-bottom:6px; }}
+input, select {{ font:inherit; font-size:1.05rem; width:100%; min-height:52px; padding:12px 18px; border-radius:16px; border:1px solid transparent; background:var(--border); color:var(--text); }}
+input:focus, select:focus {{ outline:none; border-color:var(--accent-strong); background:var(--surface); }}
+input::placeholder {{ color:var(--text-muted); opacity:1; }}
+select {{ -webkit-appearance:none; appearance:none; padding-right:44px; background:var(--border) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%234f6277' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 18px center; }} /* стрілка: колір --text-muted, у data-URI змінні не працюють */
 input[name=amount] {{ font-size:3rem; font-weight:500; letter-spacing:-.04em; padding:8px 18px; }}
-.radios {{ display:flex; gap:4px; padding:4px; background:var(--seg); border-radius:999px; }} .radios label {{ flex:1; }} .radios label {{ position:relative; }} .radios input {{ position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; }}
+.radios {{ display:flex; gap:4px; padding:4px; background:var(--border); border-radius:999px; }} .radios label {{ flex:1; }} .radios label {{ position:relative; }} .radios input {{ position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; }}
 .radios span {{ display:block; text-align:center; padding:10px; min-height:44px; border-radius:999px; cursor:pointer; }}
-.radios input:checked + span {{ background:var(--black); color:#fff; font-weight:600; }}
+.radios input:checked + span {{ background:var(--accent-strong); color:var(--on-accent); font-weight:600; }}
 .radios input:focus-visible + span {{ outline:2px solid var(--accent); outline-offset:2px; }}
-.lrow {{ display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:56px; border-bottom:1px solid var(--line); color:var(--ink); text-decoration:none; }}
-.lrow:last-child {{ border-bottom:0; }} .lrow b {{ font-weight:600; }} .lrow b::after {{ content:"›"; color:var(--ink2); font-weight:400; margin-left:12px; }}
+.lrow {{ display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:56px; border-bottom:1px solid var(--border); color:var(--text); text-decoration:none; }}
+.lrow:last-child {{ border-bottom:0; }} .lrow b {{ font-weight:600; }} .lrow b::after {{ content:"›"; color:var(--text-muted); font-weight:400; margin-left:12px; }}
 .stackbtn {{ display:flex; flex-direction:column; gap:8px; }}
 .btn.wide {{ width:100%; min-height:56px; font-size:1.05rem; }}
-.error {{ background:#ffdad6; color:#93000a; border-radius:16px; padding:12px 16px; }}
+.error {{ background:var(--negative-soft); color:var(--text); border-left:4px solid var(--negative); border-radius:16px; padding:12px 16px; }}
 </style></head><body><main>{body}</main></body></html>"""
 
 
