@@ -375,7 +375,6 @@ h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em
 .nav { display:flex; gap:8px; align-items:center; }
 .btn { font:inherit; font-size:1rem; font-weight:600; border:0; border-radius:999px; padding:10px 20px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; background:var(--accent-strong); color:var(--on-accent); text-decoration:none; cursor:pointer; }
 .btn.ghost { background:var(--border); color:var(--text); }
-.btn:active, .tabs button:active, .fab:active { transform:scale(.98); }
 .sticky { position:sticky; top:0; z-index:1; background:var(--bg); padding:12px 0 4px; }
 .tabs { display:flex; }
 #people { background:var(--border); border-radius:999px; padding:4px; }
@@ -441,7 +440,13 @@ h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600
 .lbar { display:block; height:100%; border-radius:5px; transform-origin:left; animation:grow .4s ease-out; }
 @keyframes grow { from { transform:scaleX(0); } }
 .empty { text-align:center; } .empty h2 { text-align:left; } .empty > svg { width:40px; height:40px; margin:8px auto 0; fill:none; stroke:var(--accent); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; } .empty p { margin:8px 0 16px; }
-@media (prefers-reduced-motion: reduce) { *:not(.flash) { animation:none !important; transition:none !important; } } .fine .lbar { background:var(--positive); } .near .lbar { background:var(--warning); } .over .lbar { background:var(--negative); }
+/* Рух: розділ з'являється знизу, смуги й кільця ростуть, коли розділ показано (анімація стартує з display:none заново). */
+.month [data-s]:not([hidden]) { animation:rise .18s ease-out; }
+@keyframes rise { from { opacity:0; transform:translateY(6px); } }
+.bar { transform-origin:left; animation:grow .4s ease-out; } .donut circle { animation:draw .4s ease-out; }
+.btn:active, .tabs button:active, .fab:active, .tabbar button:active, .alert:active { transform:scale(.98); }
+@media (prefers-reduced-motion: reduce) { *:not(.flash) { animation:none !important; transition:none !important; } }
+.fine .lbar { background:var(--positive); } .near .lbar { background:var(--warning); } .over .lbar { background:var(--negative); }
 .over small { color:var(--negative); font-weight:600; }
 .verdict { margin:16px 0 0; }
 a { color:var(--accent-strong); }

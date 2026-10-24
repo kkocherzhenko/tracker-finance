@@ -144,6 +144,7 @@ fieldset .radios + input {{ margin-top:8px; }}
 .cat span {{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:76px; padding:10px 4px; border:1.5px solid transparent; border-radius:16px; background:color-mix(in srgb, var(--border) 50%, var(--surface)); font-size:.8rem; line-height:1.2; text-align:center; cursor:pointer; }}
 .cat svg {{ width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }}
 .cat input:checked + span {{ border-color:var(--accent-strong); background:var(--surface); font-weight:600; }}
+.cat span:active, .radios span:active {{ transform:scale(.98); }}
 .cat input:focus-visible + span {{ outline:2px solid var(--accent); outline-offset:2px; }}
 .savebar {{ position:sticky; bottom:0; margin:0 -24px; padding:12px 24px calc(12px + env(safe-area-inset-bottom, 0px)); background:linear-gradient(to bottom, transparent, var(--bg) 35%); }}
 .radios {{ display:flex; gap:4px; padding:4px; background:var(--border); border-radius:999px; }} .radios label {{ flex:1; }} .radios label {{ position:relative; }} .radios input {{ position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; }}
