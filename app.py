@@ -138,10 +138,10 @@ input, select {{ font:inherit; font-size:1.05rem; width:100%; padding:12px 14px;
 
 
 def nav():
-    return f"""<nav class="nav"><span class="user">{me()}</span><a class="btn" href="{url_for('add')}">+ Готівка</a>
-<a class="btn ghost" href="{url_for('limits')}">Ліміти</a>
+    return f"""<details class="menu"><summary class="btn ghost" aria-label="Меню">{me()} ▾</summary>
+<div class="menu-list"><a href="{url_for('add')}">+ Готівка</a><a href="{url_for('limits')}">Ліміти</a>
 <form method="post" action="{url_for('logout')}"><input type="hidden" name="csrf" value="{csrf_token()}">
-<button class="btn ghost" type="submit">Вийти</button></form></nav>"""
+<button type="submit">Вийти</button></form></div></details>"""
 
 
 @app.route("/login", methods=["GET", "POST"])

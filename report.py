@@ -264,7 +264,7 @@ CSS = """
 :root[data-theme="dark"] { --surface:#000; --card:#1c1c1e; --ink:#f5f5f7; --ink2:#98989d; --line:#2c2c2e; --accent:#0a84ff; --muted:#48484a; --warn:#3a2f0b; --ok:#14331a; --seg:#2c2c2e; --glass:rgba(0,0,0,.75); }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--surface); color:var(--ink); font:16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
-main { max-width:720px; margin:0 auto; padding:0 16px 48px; padding-top:env(safe-area-inset-top, 0); }
+main { max-width:720px; margin:0 auto; padding:0 16px calc(96px + env(safe-area-inset-bottom, 0px)); padding-top:env(safe-area-inset-top, 0); }
 header { padding:24px 0 8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; } h1 { margin:0; font-size:2.1rem; font-weight:700; letter-spacing:-.02em; flex:1; }
 .nav { display:flex; gap:8px; align-items:center; }
 .btn { font:inherit; font-size:.95rem; border:0; border-radius:999px; padding:8px 16px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; background:var(--accent); color:#fff; text-decoration:none; cursor:pointer; font-weight:600; }
@@ -275,10 +275,17 @@ header { padding:24px 0 8px; display:flex; align-items:center; gap:12px; flex-wr
 .tabs button { flex:1; font:inherit; font-size:.9rem; color:var(--ink); background:var(--seg); border:0; border-radius:0; padding:7px 8px; min-height:44px; cursor:pointer; }
 .tabs button[aria-selected="true"] { background:var(--accent); color:#fff; font-weight:600; }
 .caption { color:var(--ink2); margin:12px 0; } .caption.partial { background:var(--warn); border-radius:12px; padding:8px 14px; color:var(--ink); }
-.flash { position:fixed; z-index:2; left:16px; right:16px; bottom:calc(16px + env(safe-area-inset-bottom, 0px)); max-width:688px; margin:0 auto; background:var(--ink); color:var(--card); border-radius:14px; padding:12px 16px; box-shadow:0 4px 16px rgba(0,0,0,.2); animation:toast 5s forwards; }
+.flash { position:fixed; z-index:2; left:16px; right:16px; bottom:calc(76px + env(safe-area-inset-bottom, 0px)); max-width:688px; margin:0 auto; background:var(--ink); color:var(--card); border-radius:14px; padding:12px 16px; box-shadow:0 4px 16px rgba(0,0,0,.2); animation:toast 5s forwards; }
 @keyframes toast { 0%, 85% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
 .alert { background:var(--warn); border-radius:12px; padding:10px 14px; margin:12px 0; }
-.user { color:var(--ink2); font-size:.95rem; }
+.tabbar { position:fixed; z-index:1; left:0; right:0; bottom:0; display:flex; justify-content:center; padding:4px 8px env(safe-area-inset-bottom, 0px); background:var(--glass); backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px); border-top:1px solid var(--line); }
+.tabbar button { flex:1; max-width:180px; min-height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font:inherit; font-size:.72rem; color:var(--ink2); background:none; border:0; cursor:pointer; }
+.tabbar button[aria-selected="true"] { color:var(--accent); font-weight:600; }
+.tabbar svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.menu { position:relative; } .menu summary { list-style:none; padding:8px 16px; } .menu summary::-webkit-details-marker { display:none; }
+.menu-list { position:absolute; right:0; top:calc(100% + 6px); z-index:3; min-width:200px; display:flex; flex-direction:column; padding:6px; background:var(--card); border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,.18); }
+.menu-list a, .menu-list button { display:flex; align-items:center; width:100%; min-height:44px; padding:0 14px; border:0; border-radius:10px; background:none; color:var(--ink); font:inherit; text-align:left; text-decoration:none; cursor:pointer; }
+.menu-list a:hover, .menu-list button:hover { background:var(--seg); } .menu-list form { margin:0; }
 .limit { margin:12px 0; } .lhead { display:flex; justify-content:space-between; gap:8px; font-size:.95rem; }
 .ltrack { display:block; height:10px; background:var(--seg); border-radius:5px; margin:4px 0 2px; overflow:hidden; }
 .lbar { display:block; height:100%; border-radius:5px; } .fine .lbar { background:var(--fine); } .near .lbar { background:var(--near); } .over .lbar { background:var(--over); }
@@ -303,6 +310,15 @@ small { color:var(--ink2); }
 .month[hidden] { display:none; }
 .foot { color:var(--ink2); font-size:.85rem; }
 """
+
+
+# Нижнє меню звіту: (ключ, підпис, іконка SVG).
+SECTIONS = [
+    ("spend", "Витрати", '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>'),
+    ("save", "Відкладено", '<path d="M12 3v12M7 10l5 5 5-5M4 20h16"/>'),
+    ("fixed", "Фіксовані", '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>'),
+    ("limits", "Ліміти", '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'),
+]
 
 
 def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None, settings_url=""):
@@ -331,8 +347,10 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
             panels.append(
                 f'<div class="month" data-m="{month_id(k)}" data-p="{v}" hidden>{limits_banner(rows)}'
                 f'<p class="caption{" partial" if partial else ""}">{v} · {MONTH_NAMES[k[1]]} {k[0]} · {cap}{note}</p>'
-                f"{block_categories(d, k, v)}{block_savings(d, k, v, partial, v == other)}{block_fixed(d, k, v)}"
-                f"{block_limits(rows, v, viewer, settings_url)}{block_cash(d, k, v)}</div>"
+                f'<div data-s="spend">{block_categories(d, k, v)}{block_cash(d, k, v)}</div>'
+                f'<div data-s="save" hidden>{block_savings(d, k, v, partial, v == other)}</div>'
+                f'<div data-s="fixed" hidden>{block_fixed(d, k, v)}</div>'
+                f'<div data-s="limits" hidden>{block_limits(rows, v, viewer, settings_url)}</div></div>'
             )
     flash_html = f'<p class="flash" role="status">{flash}</p>' if flash else ""
     return f"""<!doctype html>
@@ -347,16 +365,25 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
 {''.join(panels)}
 <p class="foot">* місяць ще не закінчився. Дані: виписки Олі й Марка за 1 серпня — 15 жовтня 2026 і готівка, додана з телефону; злоті.</p>
 </main>
+<nav class="tabbar" role="tablist" id="sections">{"".join(
+    f'<button role="tab" data-s="{k}" aria-selected="{str(k == "spend").lower()}"><svg viewBox="0 0 24 24" aria-hidden="true">{icon}</svg>{label}</button>'
+    for k, label, icon in SECTIONS)}</nav>
 <script>
 const pt = document.querySelectorAll('#people button'), mt = document.querySelectorAll('#months button'), panels = document.querySelectorAll('.month');
-let p = 'Разом', m = {json.dumps(month_id(default))};
+const st = document.querySelectorAll('#sections button');
+let p = 'Разом', m = {json.dumps(month_id(default))}, s = 'spend';
 function show() {{
+  st.forEach(t => t.setAttribute('aria-selected', t.dataset.s === s));
+  document.querySelectorAll('.month [data-s]').forEach(x => x.hidden = x.dataset.s !== s);
   pt.forEach(t => t.setAttribute('aria-selected', t.dataset.p === p));
   mt.forEach(t => t.setAttribute('aria-selected', t.dataset.m === m));
   panels.forEach(x => x.hidden = x.dataset.p !== p || x.dataset.m !== m);
   try {{ localStorage.setItem('view', JSON.stringify({{p, m}})); }} catch (e) {{}}
 }}
 pt.forEach(t => t.addEventListener('click', () => {{ p = t.dataset.p; show(); }}));
+st.forEach(t => t.addEventListener('click', () => {{ s = t.dataset.s; show(); scrollTo(0, 0); }}));
+// Меню в шапці закривається дотиком будь-де поза ним.
+document.addEventListener('click', e => document.querySelectorAll('details.menu[open]').forEach(x => x.contains(e.target) || x.removeAttribute('open')));
 mt.forEach(t => t.addEventListener('click', () => {{ m = t.dataset.m; show(); }}));
 const has = (list, key, v) => [...list].some(t => t.dataset[key] === v);
 try {{ const s = JSON.parse(localStorage.getItem('view') || '{{}}'); if (has(pt, 'p', s.p)) p = s.p; if (has(mt, 'm', s.m)) m = s.m; }} catch (e) {{}}
