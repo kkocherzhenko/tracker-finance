@@ -609,7 +609,8 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
     default = next((k for k in reversed(keys) if "закінчено" in month_caption(d, k)), keys[-1])
     month_id = lambda k: f"{k[0]}-{k[1]:02d}"
     view_tabs = "".join(
-        f'<button role="tab" data-p="{v}" aria-selected="{str(v == "Разом").lower()}">{v}</button>' for v in VIEWS
+        f'<button role="tab" data-p="{v}" aria-selected="{str(v == "Разом").lower()}">{"Ваші витрати" if v == viewer else v}</button>'
+        for v in VIEWS  # своя вкладка — «Ваші витрати»; data-p лишається іменем для посилань і запам'ятовування
     )
     month_tabs, panels = [], []
     for k in keys:
