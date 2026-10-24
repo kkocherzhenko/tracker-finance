@@ -1,8 +1,20 @@
 <!doctype html>
 <html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Наші фінанси</title>
-<style>
+<title>Наші фінанси</title><link rel="preload" href="static/fonts/onest-cyrillic-400-normal.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="static/fonts/literata-cyrillic-300-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>@font-face { font-family:Onest; font-weight:400; font-display:swap; unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; src:url(static/fonts/onest-cyrillic-400-normal.woff2) format('woff2'); }
+@font-face { font-family:Onest; font-weight:400; font-display:swap; unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; src:url(static/fonts/onest-latin-ext-400-normal.woff2) format('woff2'); }
+@font-face { font-family:Onest; font-weight:400; font-display:swap; unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; src:url(static/fonts/onest-latin-400-normal.woff2) format('woff2'); }
+@font-face { font-family:Onest; font-weight:600; font-display:swap; unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; src:url(static/fonts/onest-cyrillic-600-normal.woff2) format('woff2'); }
+@font-face { font-family:Onest; font-weight:600; font-display:swap; unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; src:url(static/fonts/onest-latin-ext-600-normal.woff2) format('woff2'); }
+@font-face { font-family:Onest; font-weight:600; font-display:swap; unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; src:url(static/fonts/onest-latin-600-normal.woff2) format('woff2'); }
+@font-face { font-family:Literata; font-weight:300; font-display:swap; unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; src:url(static/fonts/literata-cyrillic-300-normal.woff2) format('woff2'); }
+@font-face { font-family:Literata; font-weight:300; font-display:swap; unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; src:url(static/fonts/literata-latin-ext-300-normal.woff2) format('woff2'); }
+@font-face { font-family:Literata; font-weight:300; font-display:swap; unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; src:url(static/fonts/literata-latin-300-normal.woff2) format('woff2'); }
+@font-face { font-family:Literata; font-weight:600; font-display:swap; unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; src:url(static/fonts/literata-cyrillic-600-normal.woff2) format('woff2'); }
+@font-face { font-family:Literata; font-weight:600; font-display:swap; unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; src:url(static/fonts/literata-latin-ext-600-normal.woff2) format('woff2'); }
+@font-face { font-family:Literata; font-weight:600; font-display:swap; unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; src:url(static/fonts/literata-latin-600-normal.woff2) format('woff2'); }
+
 /* Розкладка — Boro UI зі Stitch; кольори — палітра логотипа Trajet (крижана гора). Усі кольори лише тут. */
 :root {
   --bg:#e9eff3; --surface:#fff; --border:#d0dced; --text:#1e3550;
@@ -10,13 +22,16 @@
   --accent:#739bbf; --accent-strong:#2b4c70; --on-accent:#fff;
   --positive:#2f7a59; --negative:#c2534b; --warning:#946a1e;
   --warning-soft:color-mix(in srgb, var(--warning) 12%, var(--surface)); --negative-soft:color-mix(in srgb, var(--negative) 12%, var(--surface));
+  --font-text:Onest, -apple-system, system-ui, sans-serif; --font-display:Literata, Georgia, serif;
   --cat1:#1e3550; --cat2:#739bbf; --cat3:#a9c1da; --cat4:#4a6f94; --cat5:#d0dced; --cat6:#2b4c70; --cat7:#8fb0cf; --cat8:#53677d;
 }
 * { box-sizing:border-box; }
-body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; } /* суми однакової ширини цифр */
+body { margin:0; background:var(--bg); color:var(--text); font:400 16px/1.5 var(--font-text); -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; } /* суми однакової ширини цифр */
 main { max-width:720px; margin:0 auto; padding:0 24px calc(160px + env(safe-area-inset-bottom, 0px)); /* кінець сторінки не ховається під «+» (84 + 60 + 16) */ padding-top:env(safe-area-inset-top, 0); }
 header { display:flex; align-items:center; gap:12px; margin:0 -24px; padding:14px 24px; border-bottom:1px solid var(--border); }
-h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em; }
+h1, h2, .hero, .ring b, .donut b { font-family:var(--font-display); font-variant-numeric:lining-nums tabular-nums; }
+h1 { margin:0; flex:1; font-size:1.35rem; font-weight:600; letter-spacing:-.01em; }
+b, strong, th { font-weight:600; }
 .nav { display:flex; gap:8px; align-items:center; }
 .btn { font:inherit; font-size:1rem; font-weight:600; border:0; border-radius:999px; padding:10px 20px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; background:var(--accent-strong); color:var(--on-accent); text-decoration:none; cursor:pointer; }
 .btn.ghost { background:var(--border); color:var(--text); }
@@ -26,9 +41,9 @@ h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em
 #people button { flex:1; min-height:44px; font:inherit; font-size:.95rem; color:var(--text); background:none; border:0; border-radius:999px; cursor:pointer; }
 #people button[aria-selected="true"] { background:var(--accent-strong); color:var(--on-accent); font-weight:600; }
 #months { justify-content:center; gap:4px; margin-top:4px; }
-#months button { min-height:44px; padding:0 12px; font:inherit; font-size:.95rem; font-weight:500; color:var(--text-muted); background:none; border:0; border-bottom:2px solid transparent; cursor:pointer; }
+#months button { min-height:44px; padding:0 12px; font:inherit; font-size:.95rem; font-weight:400; color:var(--text-muted); background:none; border:0; border-bottom:2px solid transparent; cursor:pointer; }
 #months button[aria-selected="true"] { color:var(--text); font-weight:600; border-bottom-color:var(--accent); }
-.caption { color:var(--text-muted); margin:20px 0 8px; font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
+.caption { color:var(--text-muted); margin:20px 0 8px; font-size:.9rem; }
 .caption.partial { background:var(--warning-soft); border-radius:999px; padding:8px 14px; color:var(--text); }
 .flash { position:fixed; z-index:2; left:24px; right:24px; bottom:calc(96px + env(safe-area-inset-bottom, 0px)); max-width:672px; margin:0 auto; background:var(--accent-strong); color:var(--on-accent); border-radius:999px; padding:14px 20px; animation:toast 5s forwards; }
 @keyframes toast { 0%, 85% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
@@ -47,8 +62,8 @@ h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em
 .menu-list a, .menu-list button { display:flex; align-items:center; width:100%; min-height:48px; padding:0 16px; border:0; border-radius:18px; background:none; color:var(--text); font:inherit; text-align:left; text-decoration:none; cursor:pointer; }
 .menu-list a:hover, .menu-list button:hover { background:var(--border); } .menu-list form { margin:0; }
 .card { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:24px; margin:16px 0; }
-h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
-.cur { font-size:.5em; font-weight:500; color:var(--text-muted); margin-left:.15em; letter-spacing:0; }
+h2 { margin:0 0 12px; font-size:1.2rem; font-weight:600; }
+.cur { font-size:.4em; font-weight:400; font-family:var(--font-text); color:var(--text-muted); margin-left:.15em; letter-spacing:0; }
 .ring { position:relative; width:140px; height:140px; margin:4px auto 8px; }
 .ring svg { width:100%; height:100%; } .ring circle { fill:none; stroke-width:14; } .rtrack { stroke:var(--border); }
 .rarc { stroke:var(--accent); stroke-linecap:round; animation:draw .4s ease-out; } .ring.neg .rarc { stroke:var(--negative); }
@@ -57,8 +72,8 @@ h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600
 .ring b { font-size:2rem; font-weight:600; letter-spacing:-.02em; line-height:1.1; } .ring small { font-size:.8rem; }
 .sub.center { text-align:center; }
 .chip { display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding:3px 10px; border-radius:999px; font-size:.8rem; font-weight:600; color:var(--text); white-space:nowrap; }
-.chip.bad { background:var(--negative-soft); } .chip.info { background:var(--warning-soft); font-weight:500; } .chip.good { background:color-mix(in srgb, var(--positive) 14%, var(--surface)); }
-.hero { font-size:3.5rem; line-height:1.1; font-weight:600; letter-spacing:-.03em; } .sub { color:var(--text-muted); margin:4px 0 20px; }
+.chip.bad { background:var(--negative-soft); } .chip.info { background:var(--warning-soft); font-weight:400; } .chip.good { background:color-mix(in srgb, var(--positive) 14%, var(--surface)); }
+.hero { font-size:4.25rem; line-height:1; font-weight:300; letter-spacing:-.03em; } .sub { color:var(--text-muted); margin:4px 0 20px; }
 .donut { position:relative; width:min(320px, 100%); aspect-ratio:1; margin:8px auto 20px; } /* удвічі від 160 px, але не ширше картки */
 .donut svg { display:block; width:100%; height:100%; } .donut circle { fill:none; stroke-width:18; }
 .donut div { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
@@ -109,7 +124,7 @@ h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600
 a { color:var(--accent-strong); }
 details { margin-top:12px; color:var(--text-muted); } summary { cursor:pointer; padding:10px 0; }
 table { width:100%; border-collapse:collapse; margin-top:8px; } td, th { padding:12px 6px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
-th { font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--text-muted); }
+th { font-size:.9rem; color:var(--text-muted); }
 td:last-child, th:last-child { text-align:right; white-space:nowrap; }
 small { color:var(--text-muted); }
 .month[hidden] { display:none; }

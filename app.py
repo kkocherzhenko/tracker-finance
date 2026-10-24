@@ -124,20 +124,20 @@ def page(title, body):
     return f"""<!doctype html>
 <html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>{title}</title>{HEAD}
+<title>{title}</title>{report.FONT_PRELOAD}{HEAD}
 <style>{report.CSS}
-form .field {{ display:block; margin:0 0 20px; }} form .field > span {{ display:block; color:var(--text-muted); font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; margin-bottom:6px; }}
+form .field {{ display:block; margin:0 0 20px; }} form .field > span {{ display:block; color:var(--text-muted); font-size:.9rem; margin-bottom:6px; }}
 input, select {{ font:inherit; font-size:1.05rem; width:100%; min-height:52px; padding:12px 18px; border-radius:16px; border:1px solid transparent; background:var(--border); color:var(--text); }}
 input:focus, select:focus {{ outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent-strong); background:var(--surface); }}
 input::placeholder {{ color:var(--text-muted); opacity:1; }}
 select {{ -webkit-appearance:none; appearance:none; padding-right:44px; background:var(--border) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%234f6277' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 18px center; }} /* стрілка: колір --text-muted, у data-URI змінні не працюють */
-input[name=amount] {{ font-size:3rem; font-weight:500; letter-spacing:-.04em; padding:8px 18px; }}
+input[name=amount] {{ font-size:3rem; font-weight:400; letter-spacing:-.04em; padding:8px 18px; }}
 .sr {{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }}
 .amount {{ display:flex; align-items:baseline; gap:8px; margin:4px 0 24px; font-size:2.75rem; }}
 .amount input[name=amount] {{ flex:1 1 0; min-width:0; min-height:0; padding:0; border:0; background:none; font-size:inherit; font-weight:600; letter-spacing:-.03em; text-align:right; }}
 .amount .cur {{ flex:1 1 0; margin:0; font-size:.5em; }}
 fieldset.field {{ border:0; padding:0; margin:0 0 20px; min-width:0; }}
-fieldset.field > legend {{ padding:0; margin-bottom:6px; color:var(--text-muted); font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; }}
+fieldset.field > legend {{ padding:0; margin-bottom:6px; color:var(--text-muted); font-size:.9rem; }}
 fieldset .radios + input {{ margin-top:8px; }}
 .cats {{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }}
 .cat {{ position:relative; }} .cat input {{ position:absolute; inset:0; width:100%; height:100%; min-height:0; margin:0; opacity:0; }}
@@ -155,7 +155,7 @@ fieldset .radios + input {{ margin-top:8px; }}
 .lrow:last-child {{ border-bottom:0; }} .lrow b {{ font-weight:600; }} .lrow b::after {{ content:"›"; color:var(--text-muted); font-weight:400; margin-left:12px; }}
 .stackbtn {{ display:flex; flex-direction:column; gap:8px; }}
 .btn.wide {{ width:100%; min-height:56px; font-size:1.05rem; }}
-.error {{ display:flex; gap:8px; align-items:flex-start; margin:0 0 16px; color:var(--negative); font-weight:500; }}
+.error {{ display:flex; gap:8px; align-items:flex-start; margin:0 0 16px; color:var(--negative); font-weight:400; }}
 .error svg {{ flex:none; width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; }}
 body:has(.login) {{ background:linear-gradient(to bottom, var(--bg), color-mix(in srgb, var(--accent) 15%, var(--bg))) fixed; }}
 main:has(.login) {{ padding-bottom:24px; }}
