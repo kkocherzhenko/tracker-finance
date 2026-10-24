@@ -188,15 +188,24 @@ def block_categories(d, key, view, partial):
     table = "".join(
         f"<tr><td>{escape(n)}</td><td>{zl(v)}</td><td>{pct(v, total)}</td></tr>" for n, v in rows
     )
+    legend = "".join(
+        f'<li><i class="sw" style="background:var(--cat{i % 8 + 1}){"; opacity:.6" if i >= 8 else ""}"></i>{escape(n)} <b>{pct(v, total)}</b></li>'
+        for i, (n, v) in enumerate(rows)
+    )
     verdict = f"Найбільша стаття — {rows[0][0].lower()}: {pct(rows[0][1], total)} усіх витрат."
+    # Два слайди однієї картки (scroll-snap): 1 — сума і список, 2 — кільце із сумою в центрі. Сума видна один раз.
     return f"""
-<section class="card"><h2>Куди йдуть гроші</h2>
-<div class="hero">{zl_html(total)}</div><div class="sub">витрачено за місяць {delta_chip(d, key, view, total, partial)}</div>
-{donut(rows, total)}
+<section class="card spend"><div class="cardhead"><h2>Куди йдуть гроші</h2><button type="button" class="slidetoggle">Діаграма</button></div>
+<div class="slides" tabindex="0" aria-label="Витрати: список і діаграма, стрілки вліво і вправо перемикають">
+<div class="slide"><div class="hero">{zl_html(total)}</div><div class="sub">витрачено за місяць {delta_chip(d, key, view, total, partial)}</div>
 <div class="chart">{bars}</div>
 <p class="verdict">{verdict}</p>
 <details><summary>Показати таблицею</summary>
-<table><tr><th>Категорія</th><th>Сума</th><th>Частка</th></tr>{table}</table></details></section>"""
+<table><tr><th>Категорія</th><th>Сума</th><th>Частка</th></tr>{table}</table></details></div>
+<div class="slide">{donut(rows, total)}<ul class="dlegend">{legend}</ul></div>
+</div>
+<div class="dots"><button type="button" aria-label="Список" aria-current="true"></button><button type="button" aria-label="Діаграма" aria-current="false"></button></div>
+<p class="swipehint" hidden>Свайпніть, щоб побачити діаграму</p></section>"""
 
 
 def donut(rows, total):
@@ -371,7 +380,7 @@ CSS = """
 }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; } /* суми однакової ширини цифр */
-main { max-width:720px; margin:0 auto; padding:0 24px calc(112px + env(safe-area-inset-bottom, 0px)); padding-top:env(safe-area-inset-top, 0); }
+main { max-width:720px; margin:0 auto; padding:0 24px calc(160px + env(safe-area-inset-bottom, 0px)); /* кінець сторінки не ховається під «+» (84 + 60 + 16) */ padding-top:env(safe-area-inset-top, 0); }
 header { display:flex; align-items:center; gap:12px; margin:0 -24px; padding:14px 24px; border-bottom:1px solid var(--border); }
 h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em; }
 .nav { display:flex; gap:8px; align-items:center; }
@@ -447,6 +456,18 @@ h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600
 @keyframes rise { from { opacity:0; transform:translateY(6px); } }
 .bar { transform-origin:left; animation:grow .4s ease-out; } .donut circle { animation:draw .4s ease-out; }
 .btn:active, .tabs button:active, .fab:active, .tabbar button:active, .alert:active { transform:scale(.98); }
+.cardhead { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; } .cardhead h2 { margin:0; }
+.slidetoggle { min-height:44px; padding:0 14px; border:0; border-radius:999px; background:var(--border); color:var(--text); font:inherit; font-size:.85rem; font-weight:600; cursor:pointer; }
+.slides { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none; }
+.slides::-webkit-scrollbar { display:none; } .slides:focus-visible { outline:2px solid var(--accent); outline-offset:4px; border-radius:12px; }
+.slide { flex:0 0 100%; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; }
+.chart { padding-bottom:76px; } /* «+» (60 px) + 16 px: плаваюча кнопка не закриває суми останніх рядків */
+.dlegend { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:.9rem; }
+.dlegend li { display:flex; align-items:center; gap:6px; min-width:0; } .dlegend b { margin-left:auto; font-weight:600; }
+.dots { display:flex; justify-content:center; gap:4px; margin-top:8px; }
+.dots button { display:grid; place-items:center; width:44px; height:44px; padding:0; border:0; background:none; cursor:pointer; }
+.dots button::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--border); } .dots button[aria-current="true"]::before { background:var(--accent-strong); }
+.swipehint { margin:0; text-align:center; color:var(--text-muted); font-size:.85rem; }
 @media (prefers-reduced-motion: reduce) { *:not(.flash) { animation:none !important; transition:none !important; } }
 .fine .lbar { background:var(--positive); } .near .lbar { background:var(--warning); } .over .lbar { background:var(--negative); }
 .over small { color:var(--negative); font-weight:600; }
@@ -528,8 +549,31 @@ function show() {{
   pt.forEach(t => t.setAttribute('aria-selected', t.dataset.p === p));
   mt.forEach(t => t.setAttribute('aria-selected', t.dataset.m === m));
   panels.forEach(x => x.hidden = x.dataset.p !== p || x.dataset.m !== m);
+  if (p + m !== shown) {{ shown = p + m; document.querySelectorAll('.spend').forEach(c => slide(c, 0, false)); }}  // новий місяць чи людина — знову слайд 1
   try {{ localStorage.setItem('view', JSON.stringify({{p, m}})); }} catch (e) {{}}
 }}
+// Картка витрат: свайп (scroll-snap), точки, кнопка «Діаграма / Список» і стрілки клавіатури.
+let shown = '', hint = true;
+try {{ hint = !localStorage.getItem('swiped'); }} catch (e) {{}}
+const at = c => Math.round(c.querySelector('.slides').scrollLeft / (c.querySelector('.slides').clientWidth || 1));
+function slide(c, i, smooth = true) {{
+  const x = c.querySelector('.slides');
+  x.scrollTo({{ left: i * x.clientWidth, behavior: smooth && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' }});
+  sync(c, i);
+}}
+function sync(c, i = at(c)) {{
+  c.querySelectorAll('.dots button').forEach((b, k) => b.setAttribute('aria-current', k === i));
+  c.querySelector('.slidetoggle').textContent = i ? 'Список' : 'Діаграма';
+  if (i && hint) {{ hint = false; try {{ localStorage.setItem('swiped', '1'); }} catch (e) {{}} }}
+  document.querySelectorAll('.swipehint').forEach(h => h.hidden = !hint);
+}}
+document.querySelectorAll('.spend').forEach(c => {{
+  const x = c.querySelector('.slides');
+  x.addEventListener('scroll', () => sync(c), {{ passive: true }});
+  c.querySelectorAll('.dots button').forEach((b, k) => b.addEventListener('click', () => slide(c, k)));
+  c.querySelector('.slidetoggle').addEventListener('click', () => slide(c, at(c) ? 0 : 1));
+  x.addEventListener('keydown', e => {{ if (e.key === 'ArrowRight') slide(c, 1); if (e.key === 'ArrowLeft') slide(c, 0); }});
+}});
 pt.forEach(t => t.addEventListener('click', () => {{ p = t.dataset.p; show(); }}));
 st.forEach(t => t.addEventListener('click', () => {{ s = t.dataset.s; show(); scrollTo(0, 0); }}));
 // Меню в шапці закривається дотиком будь-де поза ним.
