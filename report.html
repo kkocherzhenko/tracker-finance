@@ -257,6 +257,7 @@ st.forEach(t => t.addEventListener('click', () => { s = t.dataset.s; show(); scr
 // Меню в шапці закривається дотиком будь-де поза ним.
 document.addEventListener('click', e => document.querySelectorAll('details.menu[open]').forEach(x => x.contains(e.target) || x.removeAttribute('open')));
 mt.forEach(t => t.addEventListener('click', () => { m = t.dataset.m; show(); }));
+if (document.querySelector('.flash')) navigator.vibrate?.(10);  // відгук після збереження готівки
 document.querySelectorAll('.alert').forEach(a => a.addEventListener('click', () => { s = 'limits'; show(); scrollTo(0, 0); }));
 const has = (list, key, v) => [...list].some(t => t.dataset[key] === v);
 try { const s = JSON.parse(localStorage.getItem('view') || '{}'); if (has(pt, 'p', s.p)) p = s.p; if (has(mt, 'm', s.m)) m = s.m; } catch (e) {}

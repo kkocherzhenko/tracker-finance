@@ -132,8 +132,22 @@ input:focus, select:focus {{ outline:none; border-color:var(--accent-strong); ba
 input::placeholder {{ color:var(--text-muted); opacity:1; }}
 select {{ -webkit-appearance:none; appearance:none; padding-right:44px; background:var(--border) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%234f6277' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 18px center; }} /* стрілка: колір --text-muted, у data-URI змінні не працюють */
 input[name=amount] {{ font-size:3rem; font-weight:500; letter-spacing:-.04em; padding:8px 18px; }}
+.sr {{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }}
+.amount {{ display:flex; align-items:baseline; gap:8px; margin:4px 0 24px; font-size:2.75rem; }}
+.amount input[name=amount] {{ flex:1 1 0; min-width:0; min-height:0; padding:0; border:0; background:none; font-size:inherit; font-weight:600; letter-spacing:-.03em; text-align:right; }}
+.amount .cur {{ flex:1 1 0; margin:0; font-size:.5em; }}
+fieldset.field {{ border:0; padding:0; margin:0 0 20px; min-width:0; }}
+fieldset.field > legend {{ padding:0; margin-bottom:6px; color:var(--text-muted); font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; }}
+fieldset .radios + input {{ margin-top:8px; }}
+.cats {{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }}
+.cat {{ position:relative; }} .cat input {{ position:absolute; inset:0; width:100%; height:100%; min-height:0; margin:0; opacity:0; }}
+.cat span {{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:76px; padding:10px 4px; border:1.5px solid transparent; border-radius:16px; background:color-mix(in srgb, var(--border) 50%, var(--surface)); font-size:.8rem; line-height:1.2; text-align:center; cursor:pointer; }}
+.cat svg {{ width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }}
+.cat input:checked + span {{ border-color:var(--accent-strong); background:var(--surface); font-weight:600; }}
+.cat input:focus-visible + span {{ outline:2px solid var(--accent); outline-offset:2px; }}
+.savebar {{ position:sticky; bottom:0; margin:0 -24px; padding:12px 24px calc(12px + env(safe-area-inset-bottom, 0px)); background:linear-gradient(to bottom, transparent, var(--bg) 35%); }}
 .radios {{ display:flex; gap:4px; padding:4px; background:var(--border); border-radius:999px; }} .radios label {{ flex:1; }} .radios label {{ position:relative; }} .radios input {{ position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; }}
-.radios span {{ display:block; text-align:center; padding:10px; min-height:44px; border-radius:999px; cursor:pointer; }}
+.radios span {{ display:block; text-align:center; padding:10px 6px; min-height:44px; border-radius:999px; white-space:nowrap; cursor:pointer; }}
 .radios input:checked + span {{ background:var(--accent-strong); color:var(--on-accent); font-weight:600; }}
 .radios input:focus-visible + span {{ outline:2px solid var(--accent); outline-offset:2px; }}
 .lrow {{ display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:56px; border-bottom:1px solid var(--border); color:var(--text); text-decoration:none; }}
@@ -232,9 +246,16 @@ def add():
                 kind = "спільна" if entry["shared"] else "особиста"
                 session["added"] = f"Додано: {entry['description']}, {report.zl(entry['amount'])} ({kind})."
                 return redirect(f"{url_for('index')}?p={entry['person']}&m={entry['date']:%Y-%m}")
-    options = "".join(
-        f'<option value="{a}"{" selected" if a == form["account"] else ""}>{report.category_name(a.rsplit(":", 1)[1])}</option>'
+    cats = "".join(
+        f'<label class="cat"><input type="radio" name="account" value="{a}" required{" checked" if a == form["account"] else ""}>'
+        f'<span>{report.icon(report.category_name(a.rsplit(":", 1)[1]))}{report.category_name(a.rsplit(":", 1)[1])}</span></label>'
         for a in accounts
+    )
+    yesterday = (today - timedelta(days=1)).isoformat()
+    when = {today.isoformat(): "today", yesterday: "yesterday"}.get(form["date"], "other")
+    dates = "".join(
+        f'<label><input type="radio" name="when" value="{v}"{" checked" if v == when else ""}><span>{label}</span></label>'
+        for v, label in (("today", "Сьогодні"), ("yesterday", "Вчора"), ("other", "Інша дата"))
     )
     shared = "".join(
         f'<label><input type="radio" name="shared" value="{v}"{" checked" if v == form["shared"] else ""}><span>{label}</span></label>'
@@ -242,16 +263,31 @@ def add():
     )
     return page("Додати готівку", f"""
 <header><h1>Готівка</h1><nav class="nav"><a class="btn ghost" href="{url_for('index')}">До звіту</a></nav></header>
-<section class="card"><form method="post">
+<form method="post" class="pay">
 <input type="hidden" name="csrf" value="{csrf_token()}">
+<section class="card">
 {f'<p class="error" role="alert">{escape(error)}</p>' if error else ''}
-<label class="field"><span>Сума, зл</span><input name="amount" inputmode="decimal" placeholder="12,50" value="{escape(form['amount'])}" required autofocus></label>
+<label class="amount"><span class="sr">Сума, зл</span><input name="amount" inputmode="decimal" placeholder="0" value="{escape(form['amount'])}" required autofocus><span class="cur" aria-hidden="true">зл</span></label>
 <label class="field"><span>Що купили</span><input name="description" maxlength="80" placeholder="Кава на ринку" value="{escape(form['description'])}" required></label>
-<label class="field"><span>Категорія</span><select name="account" required>{options}</select></label>
-<label class="field"><span>Дата</span><input name="date" type="date" min="2026-08-01" max="{today + timedelta(days=1)}" value="{escape(form['date'])}" required></label>
+<fieldset class="field"><legend>Категорія</legend><div class="cats">{cats}</div></fieldset>
+<fieldset class="field"><legend>Дата</legend><div class="radios">{dates}</div>
+<input name="date" type="date" min="2026-08-01" max="{today + timedelta(days=1)}" value="{escape(form['date'])}" required aria-label="Дата"></fieldset>
 <div class="field"><span>Хто бачить</span><div class="radios">{shared}</div></div>
-<button class="btn wide" type="submit">Зберегти</button>
-</form></section>
+</section>
+<div class="savebar"><button class="btn wide" type="submit">Зберегти</button></div>
+</form>
+<script>
+// «Сьогодні» / «Вчора» ставлять дату самі; поле дати видно лише для «Інша дата». Без JS поле видно завжди.
+const f = document.querySelector('form.pay');
+function syncDate() {{
+  const w = f.when.value;
+  if (w === 'today') f.date.value = '{today.isoformat()}';
+  if (w === 'yesterday') f.date.value = '{yesterday}';
+  f.date.hidden = w !== 'other';
+}}
+f.querySelectorAll('[name=when]').forEach(r => r.addEventListener('change', syncDate));
+syncDate();
+</script>
 <p class="foot">Платить {me()}. Особисту витрату бачите лише ви, спільну — обоє.</p>""")
 
 
