@@ -205,7 +205,7 @@ def block_categories(d, key, view, partial):
     )
     # Два слайди однієї картки (scroll-snap): 1 — сума і список, 2 — кільце із сумою в центрі. Сума видна один раз.
     return f"""
-<section class="card spend"><div class="cardhead"><button type="button" class="slidetoggle">Діаграма</button></div>
+<section class="card spend"><div class="cardhead"><span class="cardlabel">{MONTH_NAMES[key[1]]} {key[0]}</span><button type="button" class="slidetoggle" aria-pressed="false" aria-label="Список. Показати діаграму">Список</button></div>
 <div class="slides" tabindex="0" aria-label="Витрати: список і діаграма, стрілки вліво і вправо перемикають">
 <div class="slide"><div class="hero">{zl_html(total)}</div><div class="sub">витрачено за місяць {delta_chip(d, key, view, total, partial)}</div>
 <div class="chart">{bars}</div>
@@ -476,6 +476,8 @@ header h1 { display:flex; align-items:center; } /* без запасу під б
 .menu-list a, .menu-list button { display:flex; align-items:center; width:100%; min-height:48px; padding:0 16px; border:0; border-radius:18px; background:none; color:var(--text); font:inherit; text-align:left; text-decoration:none; cursor:pointer; }
 .menu-list a:hover, .menu-list button:hover { background:var(--border); } .menu-list form { margin:0; }
 .card { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:24px; margin:16px 0; }
+/* Картка витрат: зверху стільки ж, скільки з боків; рядок «місяць + перемикач» → 8 px → сума → 4 px → підпис → 20 px → список */
+.card.spend { padding:20px; } .spend .hero { margin:0; } .spend .donut { margin-top:0; }
 h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
 .cur { font-size:.5em; font-weight:500; color:var(--text-muted); margin-left:.15em; letter-spacing:0; }
 .ring { position:relative; width:140px; height:140px; margin:4px auto 8px; }
@@ -523,12 +525,12 @@ h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600
 @keyframes rise { from { opacity:0; transform:translateY(6px); } }
 .bar { transform-origin:left; animation:grow .4s ease-out; } .donut circle { animation:draw .4s ease-out; }
 .btn:active, .tabs button:active, .fab:active, .tabbar button:active, .alert:active { transform:scale(.98); }
-.cardhead { display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-bottom:8px; } .cardhead h2 { margin:0; }
+.cardhead { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; } .cardhead h2 { margin:0; }
+.cardlabel { color:var(--text-muted); font-size:.9rem; }
 .slidetoggle { min-height:44px; padding:0 14px; border:0; border-radius:999px; background:var(--border); color:var(--text); font:inherit; font-size:.85rem; font-weight:600; cursor:pointer; }
 .slides { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none; }
 .slides::-webkit-scrollbar { display:none; } .slides:focus-visible { outline:2px solid var(--accent); outline-offset:4px; border-radius:12px; }
 .slide { flex:0 0 100%; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; }
-.chart { padding-bottom:76px; } /* «+» (60 px) + 16 px: плаваюча кнопка не закриває суми останніх рядків */
 .dlegend { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:.9rem; }
 .dlegend li { display:flex; align-items:center; gap:6px; min-width:0; } .dlegend b { margin-left:auto; font-weight:600; }
 .dots { display:flex; justify-content:center; gap:4px; margin-top:8px; }
@@ -664,7 +666,10 @@ function slide(c, i, smooth = true) {{
 }}
 function sync(c, i = at(c)) {{
   c.querySelectorAll('.dots button').forEach((b, k) => b.setAttribute('aria-current', k === i));
-  c.querySelector('.slidetoggle').textContent = i ? 'Список' : 'Діаграма';
+  const t = c.querySelector('.slidetoggle');  // кнопка називає те, що відкрито зараз; дотик — на інший слайд
+  t.textContent = i ? 'Діаграма' : 'Список';
+  t.setAttribute('aria-label', i ? 'Діаграма. Показати список' : 'Список. Показати діаграму');
+  t.setAttribute('aria-pressed', i === 1);
   if (i && hint) {{ hint = false; try {{ localStorage.setItem('swiped', '1'); }} catch (e) {{}} }}
   document.querySelectorAll('.swipehint').forEach(h => h.hidden = !hint);
 }}
