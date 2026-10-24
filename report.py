@@ -248,11 +248,11 @@ def stacked(parts):
 
 def block_savings(d, key, view, partial, private=False):
     if private:
-        return empty("Скільки відкладено", LOCK, f"Доходи й заощадження {view} бачить лише {view}.")
+        return empty("Скільки відкладено", PEAK, f"Доходи й заощадження {view} бачить лише {view}.")
     s = d["savings"][key, view]
     income, spent, saved = s["income"], s["spent"], s["saved"]
     if not income:
-        return empty("Скільки відкладено", SECTIONS[1][2],
+        return empty("Скільки відкладено", PEAK,
                      f"Доходу за цей місяць у даних ще немає. Витрачено {zl(spent, 0)}. Норму заощаджень порахуємо, коли надійде зарплата.")
     rate = pct(saved, income, 1)
     warn = " Місяць ще не закінчився, тому норма завищена." if partial else ""
@@ -314,26 +314,57 @@ def limits_banner(rows):
             f'<div class="achips">{chips}</div></div>')
 
 
-GAUGE = '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'
-LOCK = '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'
 STATE = {"fine": "В нормі", "near": "Близько", "over": "Перевищено"}
 
 
+# Мала гора з пунктирною тропою і прапорцем — спрощений знак trajet-zigzag з logo/ (порожні стани «Відкладено» і «Ліміти»).
+PEAK = ('<svg class="peak" viewBox="0 0 64 48" aria-hidden="true"><path class="hill" d="M2 46 L30 6 L38 14 L62 46 Z"/>'
+        '<path class="path" d="M14 44 C24 40 34 38 26 32 S 22 22 30 18 S 34 10 30 8"/><circle cx="14" cy="44" r="2.5"/>'
+        '<path class="flag" d="M30 8 V1 l6 2.2 -6 2.2"/></svg>')
+# Тропа на гору для ліміту: вершина — ліміт. Точки схилу в координатах viewBox 0 -10 300 44.
+CLIMB = [(4, 32), (70, 28), (130, 21), (190, 12), (240, 3)]
+
+
+def climb_point(frac):
+    """Точка на тропі, що пройдена на frac (0..1) довжини."""
+    seg = [(a, b, math.dist(a, b)) for a, b in zip(CLIMB, CLIMB[1:])]
+    left = frac * sum(l for *_, l in seg)
+    for (x1, y1), (x2, y2), l in seg:
+        if left <= l:
+            return x1 + (x2 - x1) * left / l, y1 + (y2 - y1) * left / l
+        left -= l
+    return CLIMB[-1]
+
+
+def climb(spent, limit, today=None):
+    """SVG: силует гори, пунктирна тропа, пройдена частина кольором стану, прапорець на вершині, риска «сьогодні»."""
+    frac = min(float(spent / limit), 1) if limit else 1
+    path = " ".join(f"{x},{y}" for x, y in CLIMB)
+    mark = ""
+    if today is not None:
+        x, y = climb_point(today)
+        mark = f'<path class="now" d="M{x:.1f} {y - 6:.1f} V{y + 6:.1f}"/>'
+    return (f'<svg class="climb" viewBox="0 -10 300 44" aria-hidden="true">'
+            f'<path class="hill" d="M0 34 L70 30 L130 23 L190 14 L240 4 L262 16 L300 34 Z"/>'
+            f'<polyline class="trail" points="{path}"/><polyline class="done" points="{path}" pathLength="100" stroke-dasharray="{frac * 100:.1f} 100"/>'
+            f'<path class="flag" d="M240 3 V-9 l9 3.2 -9 3.2"/>{mark}</svg>')
+
+
 def empty(title, svg, text, action=""):
-    """Порожня картка: іконка, одне речення і дія, якщо є."""
-    return (f'<section class="card empty"><h2>{title}</h2><svg viewBox="0 0 24 24" aria-hidden="true">{svg}</svg>'
+    """Порожня картка: іконка (або готовий <svg>, як PEAK), одне речення і дія, якщо є."""
+    icon_html = svg if svg.startswith("<svg") else f'<svg viewBox="0 0 24 24" aria-hidden="true">{svg}</svg>'
+    return (f'<section class="card empty"><h2>{title}</h2>{icon_html}'
             f'<p>{text}</p>{action}</section>')
 
 
 def block_limits(rows, view, viewer, settings_url, last=None):
     """last — остання дата даних неповного місяця: тоді показуємо позначку «сьогодні» і скільки можна на день."""
     if viewer and view not in ("Разом", viewer):
-        return empty("Ліміти", LOCK, f"Ліміти {view} бачить лише {view}.")
+        return empty("Ліміти", PEAK, f"Ліміти {view} бачить лише {view}.")
     if not rows:
         action = f'<a class="btn" href="{settings_url}">Задати ліміт</a>' if settings_url else ""
-        return empty("Ліміти", GAUGE, "Лімітів ще немає.", action)
+        return empty("Ліміти", PEAK, "Лімітів ще немає.", action)
     days = calendar.monthrange(last.year, last.month)[1] if last else 0
-    tick = f'<i class="today" style="left:{last.day / days * 100:.1f}%" title="сьогодні"></i>' if last else ""
     items = []
     for n, spent, limit in rows:
         state = level(spent, limit)[0]
@@ -346,7 +377,7 @@ def block_limits(rows, view, viewer, settings_url, last=None):
         items.append(
             f'<div class="limit {state}"><div class="lhead"><span>{escape(n)} <span class="lchip">{STATE[state]}</span></span>'
             f'<span>{zl(spent, 0)} з {zl(limit, 0)}</span></div>'
-            f'<span class="ltrack"><span class="lbar" style="width:{min(spent / limit * 100, 100) if limit else 100:.1f}%"></span>{tick}</span>'
+            f'{climb(spent, limit, last.day / days if last else None)}'
             f'<small>{note}</small></div>'
         )
     link = f'<p class="foot"><a href="{settings_url}">Налаштувати ліміти</a></p>' if settings_url else ""
@@ -446,9 +477,15 @@ h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600
 .lhead { display:flex; justify-content:space-between; align-items:center; gap:8px; } .lhead > span:last-child { font-weight:600; white-space:nowrap; }
 .lchip { display:inline-block; margin-left:4px; padding:1px 8px; border-radius:999px; font-size:.72rem; font-weight:600; vertical-align:1px; }
 .fine .lchip { background:color-mix(in srgb, var(--positive) 14%, var(--surface)); } .near .lchip { background:var(--warning-soft); } .over .lchip { background:var(--negative-soft); }
-.ltrack { position:relative; display:block; height:10px; background:var(--border); border-radius:5px; margin:8px 0 4px; }
-.today { position:absolute; top:-3px; width:2px; height:16px; margin-left:-1px; background:var(--text); border-radius:1px; }
-.lbar { display:block; height:100%; border-radius:5px; transform-origin:left; animation:grow .4s ease-out; }
+/* Ліміт — підйом на гору з логотипа: пройдене кольором стану, вершина з прапорцем = ліміт */
+.fine { --state:var(--positive); } .near { --state:var(--warning); } .over { --state:var(--negative); }
+.climb { display:block; width:100%; height:auto; margin:6px 0 2px; overflow:visible; }
+.climb .hill { fill:color-mix(in srgb, var(--border) 50%, var(--surface)); } .climb polyline { fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.climb .trail { stroke:var(--text-muted); stroke-width:1.5; stroke-dasharray:4 4; } .climb .done { stroke:var(--state); animation:draw .4s ease-out; }
+.climb .flag { fill:var(--state); stroke:var(--text); stroke-width:1.2; stroke-linejoin:round; } .climb .now { stroke:var(--text); stroke-width:2; }
+.empty > .peak { width:64px; height:48px; overflow:visible; stroke:none; } .peak .hill { fill:var(--bg); }
+.peak .path { fill:none; stroke:var(--text); stroke-width:1.6; stroke-dasharray:3 3; stroke-linecap:round; }
+.peak circle { fill:var(--text); } .peak .flag { fill:var(--accent-strong); stroke:var(--text); stroke-width:1.2; stroke-linejoin:round; }
 @keyframes grow { from { transform:scaleX(0); } }
 .empty { text-align:center; } .empty h2 { text-align:left; } .empty > svg { width:40px; height:40px; margin:8px auto 0; fill:none; stroke:var(--accent); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; } .empty p { margin:8px 0 16px; }
 /* Рух: розділ з'являється знизу, смуги й кільця ростуть, коли розділ показано (анімація стартує з display:none заново). */
@@ -469,7 +506,6 @@ h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600
 .dots button::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--border); } .dots button[aria-current="true"]::before { background:var(--accent-strong); }
 .swipehint { margin:0; text-align:center; color:var(--text-muted); font-size:.85rem; }
 @media (prefers-reduced-motion: reduce) { *:not(.flash) { animation:none !important; transition:none !important; } }
-.fine .lbar { background:var(--positive); } .near .lbar { background:var(--warning); } .over .lbar { background:var(--negative); }
 .over small { color:var(--negative); font-weight:600; }
 .verdict { margin:16px 0 0; }
 a { color:var(--accent-strong); }
