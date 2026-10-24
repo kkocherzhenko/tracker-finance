@@ -1,10 +1,11 @@
 [project]
-name = "my-finance"
+name = "tracker-finance"
 version = "0.1.0"
-description = "Особистий фінансовий трекер на Beancount 3 (WIT 5.0, заняття 7)"
+description = "Спільний фінансовий трекер Олі й Марка на Beancount 3 з веб-доступом з телефону"
 requires-python = ">=3.12"
 dependencies = [
     "beancount>=3.2,<4",
     "beanquery",
     "fava",
+    "flask",
 ]

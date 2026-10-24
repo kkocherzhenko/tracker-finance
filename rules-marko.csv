@@ -1,0 +1,19 @@
+шаблон,рахунок,фіксована
+WYNAGRODZENIE,Income:Марко:Зарплата,ні
+Kaufland,Expenses:Марко:Продукти,ні
+Auchan,Expenses:Марко:Продукти,ні
+Biedronka,Expenses:Марко:Продукти,ні
+Żabka,Expenses:Марко:Продукти,ні
+Pyszne.pl,Expenses:Марко:Доставка-Їжі,ні
+Costa Coffee,Expenses:Марко:Кафе,ні
+Manekin,Expenses:Марко:Кафе,ні
+Uber,Expenses:Марко:Транспорт,ні
+Bolt,Expenses:Марко:Транспорт,ні
+Allegro,Expenses:Марко:Покупки,ні
+Steamgames,Expenses:Марко:Розваги,ні
+Super-Pharm,Expenses:Марко:Краса-Побут,ні
+Orange Polska S.A. Abonament GSM,Expenses:Марко:Мобільний-оператор,так
+Orange Polska S.A. Światłowód,Expenses:Марко:Інтернет,так
+PGE Obrót,Expenses:Марко:Електрика,так
+Zdrofit,Expenses:Марко:Спорт,так
+YouTube Premium,Expenses:Марко:Підписки,так

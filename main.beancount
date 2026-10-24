@@ -1,31 +1,64 @@
-option "title" "Фінанси Олі"
+option "title" "Фінанси Олі й Марка"
 option "operating_currency" "PLN"
 
-2026-07-31 open Assets:Банк                     PLN
-2026-07-31 open Equity:Початковий-залишок
+; ----- Оля -----
+2026-07-31 open Assets:Оля:Банк                     PLN
+2026-07-31 open Assets:Оля:Готівка                  PLN
+2026-07-31 open Equity:Оля:Початковий-залишок
 
-2026-07-31 open Income:Зарплата                 PLN
-2026-07-31 open Income:Інше                     PLN
+2026-07-31 open Income:Оля:Зарплата                 PLN
+2026-07-31 open Income:Оля:Інше                     PLN
 
-2026-07-31 open Expenses:Житло                  PLN
-2026-07-31 open Expenses:Продукти               PLN
-2026-07-31 open Expenses:Кафе                   PLN
-2026-07-31 open Expenses:Доставка-Їжі           PLN
-2026-07-31 open Expenses:Транспорт              PLN
-2026-07-31 open Expenses:Підписки               PLN
-2026-07-31 open Expenses:Мобільний-оператор     PLN
-2026-07-31 open Expenses:Краса-Побут            PLN
-2026-07-31 open Expenses:Спорт                  PLN
-2026-07-31 open Expenses:Без-Категорії          PLN
+2026-07-31 open Expenses:Оля:Житло                  PLN
+2026-07-31 open Expenses:Оля:Продукти               PLN
+2026-07-31 open Expenses:Оля:Кафе                   PLN
+2026-07-31 open Expenses:Оля:Доставка-Їжі           PLN
+2026-07-31 open Expenses:Оля:Транспорт              PLN
+2026-07-31 open Expenses:Оля:Підписки               PLN
+2026-07-31 open Expenses:Оля:Мобільний-оператор     PLN
+2026-07-31 open Expenses:Оля:Краса-Побут            PLN
+2026-07-31 open Expenses:Оля:Спорт                  PLN
+2026-07-31 open Expenses:Оля:Інше                   PLN
+2026-07-31 open Expenses:Оля:Без-Категорії          PLN
 
 2026-07-31 * "Початковий залишок на 31 липня 2026"
-  Assets:Банк                    4500.00 PLN
-  Equity:Початковий-залишок
+  Assets:Оля:Банк                4500.00 PLN
+  Equity:Оля:Початковий-залишок
 
+; ----- Марко -----
+2026-07-31 open Assets:Марко:Банк                   PLN
+2026-07-31 open Assets:Марко:Готівка                PLN
+2026-07-31 open Equity:Марко:Початковий-залишок
 
-2026-07-31 query "витрати-за-категоріями" "SELECT year, month, account, sum(position) AS total WHERE account ~ '^Expenses' GROUP BY year, month, account ORDER BY year, month, total DESC"
-2026-07-31 query "норма-заощаджень" "SELECT year, month, -sum(number * int(root(account, 1) = 'Income')) AS income, sum(number * int(root(account, 1) = 'Expenses')) AS spent, -sum(number) AS saved, round(-sum(number) / -sum(number * int(root(account, 1) = 'Income')) * 100) AS rate_pct, max(date) AS last_day WHERE account ~ '^(Income|Expenses)' GROUP BY year, month ORDER BY year, month"
-2026-07-31 query "фіксовані-і-змінні" "SELECT year, month, 'fixed' IN tags AS fixed, sum(position) AS total WHERE account ~ '^Expenses' GROUP BY year, month, fixed ORDER BY year, month, fixed"
-2026-07-31 query "без-категорії" "SELECT year, month, date, narration, position WHERE account = 'Expenses:Без-Категорії' OR account = 'Income:Інше' ORDER BY date"
+2026-07-31 open Income:Марко:Зарплата               PLN
+2026-07-31 open Income:Марко:Інше                   PLN
+
+2026-07-31 open Expenses:Марко:Продукти             PLN
+2026-07-31 open Expenses:Марко:Кафе                 PLN
+2026-07-31 open Expenses:Марко:Доставка-Їжі         PLN
+2026-07-31 open Expenses:Марко:Транспорт            PLN
+2026-07-31 open Expenses:Марко:Покупки              PLN
+2026-07-31 open Expenses:Марко:Розваги              PLN
+2026-07-31 open Expenses:Марко:Краса-Побут          PLN
+2026-07-31 open Expenses:Марко:Спорт                PLN
+2026-07-31 open Expenses:Марко:Підписки             PLN
+2026-07-31 open Expenses:Марко:Мобільний-оператор   PLN
+2026-07-31 open Expenses:Марко:Інтернет             PLN
+2026-07-31 open Expenses:Марко:Електрика            PLN
+2026-07-31 open Expenses:Марко:Інше                 PLN
+2026-07-31 open Expenses:Марко:Без-Категорії        PLN
+
+2026-07-31 * "Початковий залишок на 31 липня 2026"
+  Assets:Марко:Банк              2860.40 PLN
+  Equity:Марко:Початковий-залишок
+
+; ----- Збережені запити -----
+; person = друга частина назви рахунку (Оля або Марко), category = остання.
+2026-07-31 query "витрати-за-категоріями" "SELECT year, month, leaf(root(account, 2)) AS person, leaf(account) AS category, sum(number) AS total WHERE account ~ '^Expenses:' GROUP BY year, month, person, category ORDER BY year, month, person, total DESC"
+2026-07-31 query "норма-заощаджень" "SELECT year, month, leaf(root(account, 2)) AS person, -sum(number * int(root(account, 1) = 'Income')) AS income, sum(number * int(root(account, 1) = 'Expenses')) AS spent, -sum(number) AS saved, max(date) AS last_day WHERE account ~ '^(Income|Expenses):' GROUP BY year, month, person ORDER BY year, month, person"
+2026-07-31 query "фіксовані-і-змінні" "SELECT year, month, leaf(root(account, 2)) AS person, 'fixed' IN tags AS fixed, sum(number) AS total WHERE account ~ '^Expenses:' GROUP BY year, month, person, fixed ORDER BY year, month, person, fixed"
+2026-07-31 query "без-категорії" "SELECT year, month, date, account, narration, position WHERE account ~ ':Без-Категорії$' OR account ~ '^Income:.*:Інше$' ORDER BY date"
+2026-07-31 query "готівка" "SELECT date, leaf(root(account, 2)) AS person, leaf(account) AS category, narration, number WHERE account ~ '^Expenses:' AND 'cash' IN tags ORDER BY date DESC"
 
 include "transactions.beancount"
+include "cash.beancount"

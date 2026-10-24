@@ -531,23 +531,6 @@ wheels = [
 ]
 
 [[package]]
-name = "my-finance"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "beancount" },
-    { name = "beanquery" },
-    { name = "fava" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "beancount", specifier = ">=3.2,<4" },
-    { name = "beanquery" },
-    { name = "fava" },
-]
-
-[[package]]
 name = "ply"
 version = "3.11"
 source = { registry = "https://pypi.org/simple" }
@@ -750,6 +733,25 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d3/81/9ab714191017d23a0e73921e7d869890e5bf6a5eca89dee57d2b76c6c536/tatsu_lts-5.16.0.tar.gz", hash = "sha256:40ad376b4ed4e139a8d00d00bd6659d44c3b7546933fb3314132f776bfa1f44f", size = 226534, upload-time = "2026-01-14T00:00:57.794Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/84/d3/c4c50188b3a75530eab685899c2efae85a1892be50335f4700963d8a1e14/tatsu_lts-5.16.0-py3-none-any.whl", hash = "sha256:43b21f741a8d1b03148e84294aa6867ab0607f9c3325d93df8b0cf3ad8ece74b", size = 82963, upload-time = "2026-01-14T00:00:56.406Z" },
+]
+
+[[package]]
+name = "tracker-finance"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "beancount" },
+    { name = "beanquery" },
+    { name = "fava" },
+    { name = "flask" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "beancount", specifier = ">=3.2,<4" },
+    { name = "beanquery" },
+    { name = "fava" },
+    { name = "flask" },
 ]
 
 [[package]]
