@@ -327,6 +327,35 @@ def empty(title, text, action=""):
     return f'<section class="sec empty"><h2>{title}</h2><div class="emptybody">{PEAK}<div><p>{text}</p>{action}</div></div></section>'
 
 
+# Тропа на гору для ліміту: вершина — ліміт. Точки схилу в координатах viewBox 0 -10 300 44.
+CLIMB = [(4, 32), (70, 28), (130, 21), (190, 12), (240, 3)]
+
+
+def climb_point(frac):
+    """Точка на тропі, що пройдена на frac (0..1) довжини."""
+    seg = [(a, b, math.dist(a, b)) for a, b in zip(CLIMB, CLIMB[1:])]
+    left = frac * sum(l for *_, l in seg)
+    for (x1, y1), (x2, y2), l in seg:
+        if left <= l:
+            return x1 + (x2 - x1) * left / l, y1 + (y2 - y1) * left / l
+        left -= l
+    return CLIMB[-1]
+
+
+def climb(spent, limit, today=None):
+    """SVG: силует гори, пунктирна тропа, пройдена частина кольором стану, прапорець на вершині, риска «сьогодні»."""
+    frac = min(float(spent / limit), 1) if limit else 1
+    path = " ".join(f"{x},{y}" for x, y in CLIMB)
+    mark = ""
+    if today is not None:
+        x, y = climb_point(today)
+        mark = f'<path class="now" d="M{x:.1f} {y - 6:.1f} V{y + 6:.1f}"/>'
+    return (f'<svg class="climb" viewBox="0 -10 300 44" aria-hidden="true">'
+            f'<path class="hill" d="M0 34 L70 30 L130 23 L190 14 L240 4 L262 16 L300 34 Z"/>'
+            f'<polyline class="trail" points="{path}"/><polyline class="done" points="{path}" pathLength="100" stroke-dasharray="{frac * 100:.1f} 100"/>'
+            f'<path class="flag" d="M240 3 V-9 l9 3.2 -9 3.2"/>{mark}</svg>')
+
+
 def block_limits(rows, view, viewer, settings_url, last=None):
     """last — остання дата даних неповного місяця: тоді показуємо позначку «сьогодні» і скільки можна на день."""
     if viewer and view not in ("Разом", viewer):
@@ -335,7 +364,6 @@ def block_limits(rows, view, viewer, settings_url, last=None):
         action = f'<a class="btn" href="{settings_url}">Задати ліміт</a>' if settings_url else ""
         return empty("Ліміти", say("empty_limits"), action)
     days = calendar.monthrange(last.year, last.month)[1] if last else 0
-    tick = f'<i class="today" style="left:{last.day / days * 100:.1f}%" title="сьогодні"></i>' if last else ""
     items = []
     for n, spent, limit in rows:
         state = level(spent, limit)[0]
@@ -348,7 +376,7 @@ def block_limits(rows, view, viewer, settings_url, last=None):
         items.append(
             f'<div class="limit {state}"><div class="lhead"><span>{escape(n)} <span class="lchip">{STATE[state]}</span></span>'
             f'<span>{zl(spent, 0)} з {zl(limit, 0)}</span></div>'
-            f'<span class="ltrack"><span class="lbar" style="width:{min(spent / limit * 100, 100) if limit else 100:.1f}%"></span>{tick}</span>'
+            f'{climb(spent, limit, last.day / days if last else None)}'
             f'<small>{note}</small></div>'
         )
     link = f'<p class="foot"><a href="{settings_url}">Налаштувати ліміти</a></p>' if settings_url else ""
@@ -430,7 +458,11 @@ small { color:var(--text-muted); }
 
 /* Розділи: звичайні блоки з тонкою лінією; залита лише .card, на всю ширину — лише .band */
 .sec { padding:24px 0 8px; }
-.sec + .sec { border-top:1px solid var(--border); }
+/* Роздільник — тропа з логотипа (точка, серпантин, прапорець), далі тонка лінія. Маска, щоб колір був зі змінної. */
+.sec + .sec::before { content:""; display:block; height:16px; margin-bottom:20px; background:var(--accent);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 16'%3E%3Ccircle cx='3' cy='12' r='2.5'/%3E%3Cpath d='M3 12 C15 12 18 4 30 4 S46 12 58 12 S74 5 84 5' fill='none' stroke='%23000' stroke-width='1.6' stroke-dasharray='3 3' stroke-linecap='round'/%3E%3Cpath d='M86 14 V2 l7 2.4 -7 2.4'/%3E%3C/svg%3E") 0 50% / 96px 16px no-repeat, linear-gradient(#000, #000) 104px 50% / calc(100% - 104px) 1px no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 16'%3E%3Ccircle cx='3' cy='12' r='2.5'/%3E%3Cpath d='M3 12 C15 12 18 4 30 4 S46 12 58 12 S74 5 84 5' fill='none' stroke='%23000' stroke-width='1.6' stroke-dasharray='3 3' stroke-linecap='round'/%3E%3Cpath d='M86 14 V2 l7 2.4 -7 2.4'/%3E%3C/svg%3E") 0 50% / 96px 16px no-repeat, linear-gradient(#000, #000) 104px 50% / calc(100% - 104px) 1px no-repeat; }
+.sec + .sec { padding-top:16px; }
 .sechead { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:4px; } .sechead h2 { margin:0; }
 .card { margin:24px 0; padding:20px; border-radius:var(--r-m); background:var(--ice); }
 .band { margin:12px -24px 0; padding:12px 24px 14px; background:var(--ice); cursor:pointer; }
@@ -489,9 +521,10 @@ th { font-size:.9rem; color:var(--text-muted); } td:last-child, th:last-child { 
 .lhead { display:flex; justify-content:space-between; align-items:baseline; gap:8px; } .lhead > span:last-child { font-weight:600; white-space:nowrap; }
 .lchip { margin-left:6px; color:var(--text-muted); font-size:.85rem; white-space:nowrap; }
 .lchip::before { content:""; display:inline-block; width:8px; height:8px; margin-right:5px; border-radius:var(--r-full); background:var(--state); }
-.ltrack { position:relative; display:block; height:8px; margin:8px 0 4px; border-radius:var(--r-full); background:var(--soft); }
-.lbar { display:block; height:100%; border-radius:var(--r-full); background:var(--state); transform-origin:left; animation:grow .4s ease-out; }
-.today { position:absolute; top:-3px; width:2px; height:14px; margin-left:-1px; background:var(--text); }
+.climb { display:block; width:100%; height:auto; margin:6px 0 2px; overflow:visible; }
+.climb .hill { fill:var(--soft); } .climb polyline { fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.climb .trail { stroke:var(--text-muted); stroke-width:1.5; stroke-dasharray:4 4; } .climb .done { stroke:var(--state); animation:draw .4s ease-out; }
+.climb .flag { fill:var(--state); stroke:var(--text); stroke-width:1.2; stroke-linejoin:round; } .climb .now { stroke:var(--text); stroke-width:2; }
 .achips { display:flex; gap:8px; margin-top:8px; overflow-x:auto; white-space:nowrap; scrollbar-width:none; } .achips::-webkit-scrollbar { display:none; }
 .achip { flex:none; padding:6px 12px; border-radius:var(--r-full); background:var(--base); font-size:.9rem; }
 .achip::before { content:""; display:inline-block; width:8px; height:8px; margin-right:6px; border-radius:var(--r-full); background:var(--state); }
