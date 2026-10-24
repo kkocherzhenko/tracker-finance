@@ -125,7 +125,7 @@ def page(title, body):
     return f"""<!doctype html>
 <html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>{title}</title>{report.FONT_PRELOAD}{HEAD}
+<title>{title}</title>{HEAD}
 <style>{report.CSS}
 form .field {{ display:block; margin:0 0 20px; }}
 form .field > span, fieldset.field > legend {{ display:block; padding:0; margin-bottom:6px; color:var(--text-muted); font-size:.9rem; }}
@@ -135,7 +135,7 @@ input:focus, select:focus {{ outline:2px solid var(--accent-strong); outline-off
 input::placeholder {{ color:var(--text-muted); opacity:1; }}
 select {{ -webkit-appearance:none; appearance:none; padding-right:40px; background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%234f6277' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center; }} /* стрілка: колір --text-muted, у data-URI змінні не працюють */
 .sr {{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }}
-/* Сума — великою цифрою Literata, «зл» поруч; поле росте разом із числом */
+/* Сума — великою цифрою, «зл» поруч; поле росте разом із числом */
 .amount {{ display:flex; align-items:baseline; gap:6px; margin:4px 0 24px; padding-bottom:6px; border-bottom:1px solid var(--text-muted); font-size:3.5rem; }}
 .amount input[name=amount] {{ flex:0 1 auto; width:6.5ch; field-sizing:content; min-width:1.5ch; max-width:100%; min-height:0; padding:0; border:0; border-radius:0; background:none; font:300 1em/1.1 var(--font-display); letter-spacing:-.03em; font-variant-numeric:lining-nums tabular-nums; outline-offset:6px; }}
 .amount .cur {{ margin:0; font-size:.4em; }}

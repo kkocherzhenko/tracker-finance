@@ -395,25 +395,7 @@ def block_cash(d, key, view):
     return f'<section class="sec"><h2>Готівка з телефону</h2><ul class="cash">{items}</ul></section>'
 
 
-# Шрифти лежать у static/fonts (OFL, з fontsource), шлях відносний — працює і в застосунку, і в report.html.
-# Браузер вантажить лише ті набори символів, що є на сторінці (unicode-range): кирилицю і латиницю.
-FONT_RANGES = {
-    "cyrillic": "U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116",
-    "latin-ext": "U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF",
-    "latin": "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD",
-}
-FONT_CSS = "".join(
-    f"@font-face {{ font-family:{family}; font-weight:{weight}; font-display:swap; unicode-range:{ranges}; "
-    f"src:url(static/fonts/{family.lower()}-{subset}-{weight}-normal.woff2) format('woff2'); }}\n"
-    for family, weight in (("Onest", 400), ("Onest", 600), ("Literata", 300), ("Literata", 600))
-    for subset, ranges in FONT_RANGES.items()
-)
-FONT_PRELOAD = "".join(
-    f'<link rel="preload" href="static/fonts/{f}-cyrillic-{w}-normal.woff2" as="font" type="font/woff2" crossorigin>'
-    for f, w in (("onest", 400), ("literata", 300))
-)
-
-CSS = FONT_CSS + """
+CSS = """
 /* Trajet: тепла біла основа, один акцент, тонкі лінії замість карток. Кольори — палітра логотипа (logo/palette-prompt-en.md).
    Лише 3 радіуси (--r-s/--r-m/--r-full), 1 тінь (--lift), 3 кольори тексту (--text, --text-muted, --on-accent). */
 :root {
@@ -427,7 +409,7 @@ CSS = FONT_CSS + """
   --soft:color-mix(in srgb, var(--border) 50%, var(--base));
   --r-s:8px; --r-m:16px; --r-full:999px;
   --lift:0 6px 20px color-mix(in srgb, var(--text) 18%, transparent);
-  --font-text:Onest, -apple-system, system-ui, sans-serif; --font-display:Literata, Georgia, serif;
+  --font-text:Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; --font-display:var(--font-text);
 }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--base); color:var(--text); font:400 16px/1.5 var(--font-text); -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; }
@@ -619,7 +601,7 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
     return f"""<!doctype html>
 <html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Наші фінанси</title>{FONT_PRELOAD}{head}
+<title>Наші фінанси</title>{head}
 <style>{CSS}</style></head><body><main>
 <header><h1>Наші фінанси</h1>{nav}</header>
 {flash_html}

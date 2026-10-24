@@ -52,7 +52,6 @@ uv run python -m unittest -v
 | `test_privacy.py` | Тести: хто що бачить |
 | `make_env.py` | Створює `.env` з секретним ключем і хешами паролів Олі й Марка |
 | `static/` | Маніфест, іконки, service worker для встановлення на телефон |
-| `static/fonts/` | Шрифти Literata і Onest (OFL, ліцензії поруч), лежать на сервері, без CDN |
 | `ui_strings.py` | Глосарій фраз інтерфейсу: один теплий тон для всіх написів |
 | `logo/`, `design-research/` | Логотип Trajet, палітра і правила дизайну |
 
