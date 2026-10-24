@@ -5,6 +5,7 @@
 """
 import csv
 import json
+import math
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
@@ -25,6 +26,33 @@ MONTH_NAMES = {1: "Січень", 2: "Лютий", 3: "Березень", 4: "К
 MONTH_GEN = {1: "січня", 2: "лютого", 3: "березня", 4: "квітня", 5: "травня", 6: "червня",
              7: "липня", 8: "серпня", 9: "вересня", 10: "жовтня", 11: "листопада", 12: "грудня"}
 CATEGORY_NAMES = {"Краса-Побут": "Краса і побут", "Доставка-Їжі": "Доставка їжі"}
+
+
+# Іконки категорій (лінії 24×24, як у нижньому меню). Ключ — назва з category_name().
+ICONS = {
+    "Продукти": '<path d="M3 9h18l-2 11H5z"/><path d="M8 9l4-6 4 6"/>',
+    "Житло": '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+    "Доставка їжі": '<circle cx="6" cy="17" r="2.5"/><circle cx="18" cy="17" r="2.5"/><path d="M8.5 17h7M14 6h3l1.5 8.5M6 14.5V10h5l3 4"/>',
+    "Кафе": '<path d="M4 8h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 10h2a2 2 0 0 1 0 4h-2M8 3v2M12 3v2"/>',
+    "Транспорт": '<rect x="5" y="3" width="14" height="14" rx="2"/><path d="M5 11h14M8 17v3M16 17v3"/>',
+    "Спорт": '<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>',
+    "Підписки": '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
+    "Мобільний оператор": '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+    "Інтернет": '<path d="M2 9a15 15 0 0 1 20 0M5 13a10 10 0 0 1 14 0M8.5 16.5a5 5 0 0 1 7 0"/><path d="M12 20h.01"/>',
+    "Електрика": '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+    "Покупки": '<path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
+    "Краса і побут": '<path d="M12 3l2 5.5 5.5 1.5-5.5 2-2 6-2-6-5.5-2 5.5-1.5z"/>',
+    "Розваги": '<path d="M3 7h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4z"/><path d="M14 7v10"/>',
+    "Інше": '<path d="M6 12h.01M12 12h.01M18 12h.01"/>',
+    "Без категорії": '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.5V14M12 17.5h.01"/>',
+}
+
+
+def icon(name):
+    """SVG-іконка категорії; невідома категорія — перша літера."""
+    if name in ICONS:
+        return f'<svg viewBox="0 0 24 24" aria-hidden="true">{ICONS[name]}</svg>'
+    return f'<span aria-hidden="true">{escape(name[:1])}</span>'
 
 
 def category_name(leaf):
@@ -148,9 +176,9 @@ def block_categories(d, key, view, partial):
     top = rows[0][1] or Decimal(1)
     bars = "".join(
         f'<div class="row" title="{escape(n)}: {zl(v)}, {pct(v, total)} витрат">'
-        f'<span class="name">{escape(n)}</span>'
-        f'<span class="track"><span class="bar" style="width:{max(v, 0) / top * 100:.1f}%"></span></span>'
-        f'<span class="val">{zl(v, 0)}</span></div>'
+        f'<span class="ico">{icon(n)}</span><span class="name">{escape(n)}</span><span class="val">{zl(v, 0)}</span>'
+        f'<span class="meta"><small>{pct(v, total)}</small>'
+        f'<span class="track"><span class="bar" style="width:{max(v, 0) / top * 100:.1f}%"></span></span></span></div>'
         for n, v in rows
     )
     table = "".join(
@@ -160,10 +188,26 @@ def block_categories(d, key, view, partial):
     return f"""
 <section class="card"><h2>Куди йдуть гроші</h2>
 <div class="hero">{zl_html(total)}</div><div class="sub">витрачено за місяць {delta_chip(d, key, view, total, partial)}</div>
+{donut(rows, total)}
 <div class="chart">{bars}</div>
 <p class="verdict">{verdict}</p>
 <details><summary>Показати таблицею</summary>
 <table><tr><th>Категорія</th><th>Сума</th><th>Частка</th></tr>{table}</table></details></section>"""
+
+
+def donut(rows, total):
+    """Кільце 160 px: сегменти в порядку рядків, кольори --cat1..8 (понад 8 — ті самі з прозорістю), проміжки 2 px."""
+    r, c = 71, 2 * math.pi * 71
+    segs, start = [], 0.0
+    for i, (_, v) in enumerate(rows):
+        share = float(max(v, 0) / total) if total > 0 else 0
+        if share * c > 2:
+            fade = "; opacity:.6" if i >= 8 else ""
+            segs.append(f'<circle r="{r}" cx="80" cy="80" style="stroke:var(--cat{i % 8 + 1}){fade}" '
+                        f'stroke-dasharray="{share * c - 2:.2f} {c:.2f}" stroke-dashoffset="{-start:.2f}"/>')
+        start += share * c
+    return (f'<div class="donut"><svg viewBox="0 0 160 160" aria-hidden="true"><g transform="rotate(-90 80 80)">{"".join(segs)}</g></svg>'
+            f'<div><b>{zl_html(total)}</b><small>витрачено</small></div></div>')
 
 
 def stacked(parts):
@@ -322,10 +366,17 @@ h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600
 .chip { display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding:3px 10px; border-radius:999px; font-size:.8rem; font-weight:600; color:var(--text); white-space:nowrap; }
 .chip.bad { background:var(--negative-soft); } .chip.good { background:color-mix(in srgb, var(--positive) 14%, var(--surface)); }
 .hero { font-size:3.5rem; line-height:1.1; font-weight:600; letter-spacing:-.03em; } .sub { color:var(--text-muted); margin:4px 0 20px; }
-.row { display:grid; grid-template-columns:minmax(90px, 132px) 1fr 76px; align-items:center; gap:10px; margin:8px 0; }
-.name { color:var(--text-muted); font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .val { text-align:right; font-size:.9rem; font-weight:500; white-space:nowrap; }
-.track { height:14px; } .bar { display:block; height:100%; background:var(--accent); border-radius:0 4px 4px 0; }
-.row:nth-child(8n+1) .bar { background:var(--cat1); } .row:nth-child(8n+2) .bar { background:var(--cat2); } .row:nth-child(8n+3) .bar { background:var(--cat3); } .row:nth-child(8n+4) .bar { background:var(--cat4); } .row:nth-child(8n+5) .bar { background:var(--cat5); } .row:nth-child(8n+6) .bar { background:var(--cat6); } .row:nth-child(8n+7) .bar { background:var(--cat7); } .row:nth-child(8n+0) .bar { background:var(--cat8); }
+.donut { position:relative; width:160px; height:160px; margin:8px auto 20px; }
+.donut svg { width:100%; height:100%; } .donut circle { fill:none; stroke-width:18; }
+.donut div { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.donut b { font-size:1.35rem; font-weight:600; letter-spacing:-.02em; } .donut small { font-size:.8rem; }
+.row { display:grid; grid-template-columns:36px 1fr auto; grid-template-areas:"ico name val" "ico meta meta"; column-gap:12px; row-gap:2px; align-items:center; min-height:48px; padding:6px 0; }
+.ico { grid-area:ico; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:color-mix(in srgb, var(--c) 18%, var(--surface)); color:var(--text); font-weight:600; }
+.ico svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.name { grid-area:name; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .val { grid-area:val; text-align:right; font-weight:600; white-space:nowrap; }
+.meta { grid-area:meta; display:flex; align-items:center; gap:8px; } .meta small { min-width:2.6em; font-size:.8rem; }
+.track { flex:1; height:6px; background:color-mix(in srgb, var(--border) 40%, var(--surface)); /* світліше за --cat5, щоб її смугу було видно */ border-radius:3px; overflow:hidden; } .bar { display:block; height:100%; background:var(--c, var(--accent)); border-radius:3px; }
+.row:nth-child(8n+1) { --c:var(--cat1); } .row:nth-child(8n+2) { --c:var(--cat2); } .row:nth-child(8n+3) { --c:var(--cat3); } .row:nth-child(8n+4) { --c:var(--cat4); } .row:nth-child(8n+5) { --c:var(--cat5); } .row:nth-child(8n+6) { --c:var(--cat6); } .row:nth-child(8n+7) { --c:var(--cat7); } .row:nth-child(8n+0) { --c:var(--cat8); }
 .row:nth-child(n+9) .bar { opacity:.6; } /* понад 8 категорій — ті самі кольори, але прозоріші */
 .stack { display:flex; gap:2px; height:14px; }
 .seg { min-width:2px; } .seg:first-child { border-radius:7px 0 0 7px; } .seg:last-child { border-radius:0 7px 7px 0; }
