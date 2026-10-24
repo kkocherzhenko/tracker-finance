@@ -439,8 +439,6 @@ h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em
 #months { justify-content:center; gap:4px; margin-top:4px; }
 #months button { min-height:44px; padding:0 12px; font:inherit; font-size:.95rem; font-weight:500; color:var(--text-muted); background:none; border:0; border-bottom:2px solid transparent; cursor:pointer; }
 #months button[aria-selected="true"] { color:var(--text); font-weight:600; border-bottom-color:var(--accent); }
-.caption { color:var(--text-muted); margin:20px 0 8px; font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
-.caption.partial { background:var(--warning-soft); border-radius:999px; padding:8px 14px; color:var(--text); }
 .flash { position:fixed; z-index:2; left:24px; right:24px; bottom:calc(96px + env(safe-area-inset-bottom, 0px)); max-width:672px; margin:0 auto; background:var(--accent-strong); color:var(--on-accent); border-radius:999px; padding:14px 20px; animation:toast 5s forwards; }
 @keyframes toast { 0%, 85% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
 .alert { background:var(--surface); border:1px solid color-mix(in srgb, var(--warning) 40%, var(--surface)); border-radius:24px; padding:12px 16px; margin:16px 0 0; cursor:pointer; }
@@ -579,7 +577,6 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
     d = load(ledger, viewer)
     limit_table = load_limits(limits)
     other = next(p for p in PEOPLE if p != viewer) if viewer else None
-    scope = {"Разом": f"ваші витрати і спільні витрати {other}", other: "лише спільні витрати"} if viewer else {}
     keys = d["keys"]
     default = next((k for k in reversed(keys) if "закінчено" in month_caption(d, k)), keys[-1])
     month_id = lambda k: f"{k[0]}-{k[1]:02d}"
@@ -588,18 +585,15 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
     )
     month_tabs, panels = [], []
     for k in keys:
-        cap = month_caption(d, k)
-        partial = "неповний" in cap
+        partial = "неповний" in month_caption(d, k)
         month_tabs.append(
             f'<button role="tab" data-m="{month_id(k)}" aria-selected="{str(k == default).lower()}">'
-            f'{MONTH_NAMES[k[1]]}{" *" if partial else ""}</button>'
+            f'{MONTH_NAMES[k[1]]}</button>'
         )
         for v in VIEWS:
             rows = limit_rows(d, k, v, viewer, limit_table)
-            note = f" · {scope[v]}" if v in scope else ""
             panels.append(
                 f'<div class="month" data-m="{month_id(k)}" data-p="{v}" hidden>{limits_banner(rows)}'
-                f'<p class="caption{" partial" if partial else ""}">{v} · {MONTH_NAMES[k[1]]} {k[0]} · {cap}{note}</p>'
                 f'<div data-s="spend">{block_categories(d, k, v, partial)}{block_cash(d, k, v)}</div>'
                 f'<div data-s="save" hidden>{block_savings(d, k, v, partial, v == other)}</div>'
                 f'<div data-s="fixed" hidden>{block_fixed(d, k, v)}</div>'
@@ -616,7 +610,7 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
 <div class="sticky"><div class="tabs" role="tablist" id="people">{view_tabs}</div>
 <div class="tabs" role="tablist" id="months">{''.join(month_tabs)}</div></div>
 {''.join(panels)}
-<p class="foot">* місяць ще не закінчився. Дані: виписки Олі й Марка за 1 серпня — 15 жовтня 2026 і готівка, додана з телефону; злоті.</p>
+<p class="foot">Дані: виписки Олі й Марка за 1 серпня — 15 жовтня 2026 і готівка, додана з телефону; злоті.</p>
 </main>
 <nav class="tabbar" role="tablist" id="sections">{"".join(
     f'<button role="tab" data-s="{k}" aria-selected="{str(k == "spend").lower()}"><svg viewBox="0 0 24 24" aria-hidden="true">{icon}</svg>{label}</button>'
