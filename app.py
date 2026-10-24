@@ -128,7 +128,7 @@ def page(title, body):
 <style>{report.CSS}
 form .field {{ display:block; margin:0 0 20px; }} form .field > span {{ display:block; color:var(--text-muted); font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; margin-bottom:6px; }}
 input, select {{ font:inherit; font-size:1.05rem; width:100%; min-height:52px; padding:12px 18px; border-radius:16px; border:1px solid transparent; background:var(--border); color:var(--text); }}
-input:focus, select:focus {{ outline:none; border-color:var(--accent-strong); background:var(--surface); }}
+input:focus, select:focus {{ outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent-strong); background:var(--surface); }}
 input::placeholder {{ color:var(--text-muted); opacity:1; }}
 select {{ -webkit-appearance:none; appearance:none; padding-right:44px; background:var(--border) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%234f6277' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 18px center; }} /* стрілка: колір --text-muted, у data-URI змінні не працюють */
 input[name=amount] {{ font-size:3rem; font-weight:500; letter-spacing:-.04em; padding:8px 18px; }}
@@ -155,8 +155,21 @@ fieldset .radios + input {{ margin-top:8px; }}
 .lrow:last-child {{ border-bottom:0; }} .lrow b {{ font-weight:600; }} .lrow b::after {{ content:"›"; color:var(--text-muted); font-weight:400; margin-left:12px; }}
 .stackbtn {{ display:flex; flex-direction:column; gap:8px; }}
 .btn.wide {{ width:100%; min-height:56px; font-size:1.05rem; }}
-.error {{ background:var(--negative-soft); color:var(--text); border-left:4px solid var(--negative); border-radius:16px; padding:12px 16px; }}
+.error {{ display:flex; gap:8px; align-items:flex-start; margin:0 0 16px; color:var(--negative); font-weight:500; }}
+.error svg {{ flex:none; width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; }}
+body:has(.login) {{ background:linear-gradient(to bottom, var(--bg), color-mix(in srgb, var(--accent) 15%, var(--bg))) fixed; }}
+main:has(.login) {{ padding-bottom:24px; }}
+.login {{ min-height:calc(100dvh - 24px); max-width:420px; margin:0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; }}
+.login img {{ border-radius:16px; }} .login h1 {{ flex:none; margin:12px 0 4px; text-align:center; }} .login .card {{ width:100%; }}
 </style></head><body><main>{body}</main></body></html>"""
+
+
+def error_html(error):
+    """Помилка форми: іконка і текст кольору --negative на білому (контраст 4.5:1)."""
+    if not error:
+        return ""
+    return ('<p class="error" role="alert"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/>'
+            f'<path d="M12 7.5v5.5M12 16.5h.01"/></svg>{escape(error)}</p>')
 
 
 def nav():
@@ -190,14 +203,14 @@ def login():
     if not USERS:
         error = "Вхід ще не налаштовано: на сервері немає хешів паролів (make_env.py)."
     return page("Вхід", f"""
-<header><h1>Наші фінанси</h1></header>
+<div class="login"><img src="/static/icon-192.png" alt="" width="64" height="64"><h1>Наші фінанси</h1>
 <section class="card"><form method="post">
 <input type="hidden" name="csrf" value="{csrf_token()}">
-{f'<p class="error" role="alert">{escape(error)}</p>' if error else ''}
+{error_html(error)}
 <label class="field"><span>Логін</span><input name="login" autocomplete="username" autocapitalize="none" required></label>
 <label class="field"><span>Пароль</span><input name="password" type="password" autocomplete="current-password" required></label>
 <button class="btn wide" type="submit">Увійти</button>
-</form></section>""")
+</form></section></div>""")
 
 
 @app.post("/logout")
@@ -267,7 +280,7 @@ def add():
 <form method="post" class="pay">
 <input type="hidden" name="csrf" value="{csrf_token()}">
 <section class="card">
-{f'<p class="error" role="alert">{escape(error)}</p>' if error else ''}
+{error_html(error)}
 <label class="amount"><span class="sr">Сума, зл</span><input name="amount" inputmode="decimal" placeholder="0" value="{escape(form['amount'])}" required autofocus><span class="cur" aria-hidden="true">зл</span></label>
 <label class="field"><span>Що купили</span><input name="description" maxlength="80" placeholder="Кава на ринку" value="{escape(form['description'])}" required></label>
 <fieldset class="field"><legend>Категорія</legend><div class="cats">{cats}</div></fieldset>
@@ -371,7 +384,7 @@ def limits():
 {f'<p class="flash" role="status">{flash}</p>' if flash else ''}
 <section class="card"><h2>Задати ліміт</h2><form method="post">
 <input type="hidden" name="csrf" value="{csrf_token()}">
-{f'<p class="error" role="alert">{escape(error)}</p>' if error else ''}
+{error_html(error)}
 <label class="field"><span>Категорія</span><select name="account" onchange="location.href='?account='+encodeURIComponent(this.value)">{options}</select></label>
 <label class="field"><span>Ліміт на місяць, зл</span><input name="amount" inputmode="decimal" placeholder="500" value="{escape(amount)}" required></label>
 <div class="stackbtn"><button class="btn wide" type="submit">Зберегти</button>{remove}</div>
