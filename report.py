@@ -410,6 +410,25 @@ CSS = """
   --cat1:#1e3550; --cat2:#739bbf; --cat3:#a9c1da; --cat4:#4a6f94; --cat5:#d0dced; --cat6:#2b4c70; --cat7:#8fb0cf; --cat8:#53677d;
 }
 * { box-sizing:border-box; }
+html { background:var(--bg); } /* без білого спалаху до першого кадру */
+/* Заставка: кінцевий стан — у базових стилях, анімації з backwards, тож без руху видно готовий знак */
+#splash { position:fixed; inset:0; z-index:10; display:grid; place-items:center; padding:24px; background:var(--bg); animation:sp-out .3s 2.2s ease-in forwards; }
+#splash svg { width:min(300px, 72vw); height:auto; overflow:visible; }
+#sp-mountain { animation:sp-rise .7s ease-out backwards; }
+.sp-rim { fill:var(--accent); } .sp-ice { fill:var(--bg); stroke:var(--border); stroke-width:6; } .sp-shade { fill:var(--accent); }
+.sp-snow { fill:var(--surface); stroke:var(--border); stroke-width:6; stroke-linejoin:round; } .sp-snow2 { fill:var(--border); } .sp-rock { fill:var(--text); }
+#sp-path path { fill:none; stroke:var(--text); stroke-width:6px; stroke-linecap:round; stroke-dasharray:1; stroke-dashoffset:0; }
+.sp-low { animation:sp-draw .6s .7s ease-in-out backwards; } .sp-high { animation:sp-draw .35s 1.4s ease-out backwards; }
+.sp-dot { fill:var(--text); stroke:var(--surface); stroke-width:4; animation:sp-fade .2s .6s ease-out backwards; }
+#sp-flag { transform-box:fill-box; transform-origin:0 100%; animation:sp-pop .15s 1.75s ease-out backwards; }
+.sp-pole { stroke:var(--text); stroke-width:6; stroke-linecap:round; } .sp-pennant { fill:var(--text); }
+#sp-wordmark { animation:sp-fade .3s 1.9s ease-out backwards; }
+#sp-wordmark text { fill:var(--text); font:700 150px Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; letter-spacing:-4px; }
+@keyframes sp-rise { from { opacity:0; transform:translateY(24px); } }
+@keyframes sp-draw { from { stroke-dashoffset:1; } }
+@keyframes sp-fade { from { opacity:0; } }
+@keyframes sp-pop { from { opacity:0; transform:scale(.4); } }
+@keyframes sp-out { to { opacity:0; visibility:hidden; } }
 body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; } /* суми однакової ширини цифр */
 main { max-width:720px; margin:0 auto; padding:0 24px calc(160px + env(safe-area-inset-bottom, 0px)); /* кінець сторінки не ховається під «+» (84 + 60 + 16) */ padding-top:env(safe-area-inset-top, 0); }
 header { display:flex; align-items:center; gap:12px; margin:0 -24px; padding:14px 24px; border-bottom:1px solid var(--border); }
@@ -519,6 +538,38 @@ small { color:var(--text-muted); }
 """
 
 
+# Заставка при холодному старті: знак trajet-spiral з logo/, перемальований окремими групами, щоб анімувати CSS.
+# Гора з'являється (0–0,7 с), тропа малюється (0,7–1,75 с), прапорець (до 1,9 с), назва (до 2,2 с), згасання (до 2,5 с).
+SPLASH = """<div id="splash" aria-hidden="true"><svg viewBox="40 0 900 960">
+<g id="sp-mountain">
+<path class="sp-rim" d="M50 566 L905 576 L910 616 L855 656 L865 706 L795 716 L885 756 L905 796 L545 786 L295 716 L285 666 L155 656 L145 606 Z"/>
+<path class="sp-ice" d="M50 552 L905 562 L910 602 L855 642 L865 692 L795 702 L885 742 L905 782 L545 772 L295 702 L285 652 L155 642 L145 592 Z"/>
+<path class="sp-shade" d="M70 545 L190 430 L230 350 L330 230 L400 190 L490 80 L470 560 Z"/>
+<path class="sp-snow" d="M490 80 L600 190 L640 260 L760 380 L860 470 L905 560 L470 560 Z"/>
+<path class="sp-snow2" d="M470 300 L540 380 L700 350 L770 430 L790 530 L470 545 Z"/>
+<path class="sp-rock" d="M62 548 C110 520 150 500 165 470 C180 500 175 530 200 520 C215 470 220 440 240 435 C270 450 270 520 300 545 C330 520 340 470 360 470 C380 500 370 540 420 545 C470 520 480 440 500 430 C520 470 510 520 540 545 C590 530 600 460 620 465 C640 500 640 530 700 520 C720 470 740 400 760 395 C790 450 800 480 840 470 C870 500 895 545 905 575 C700 560 400 580 200 590 C130 588 80 575 62 548 Z"/>
+</g>
+<g id="sp-path">
+<circle class="sp-dot" cx="473" cy="658" r="14"/>
+<path class="sp-low" pathLength="1" vector-effect="non-scaling-stroke" d="M473 658 C640 610 860 575 905 540 C960 495 900 430 800 405"/>
+<path class="sp-high" pathLength="1" vector-effect="non-scaling-stroke" d="M205 310 C330 300 520 270 590 220 C640 180 600 130 490 80"/>
+</g>
+<g id="sp-flag"><path class="sp-pole" d="M490 82 V12"/><path class="sp-pennant" d="M494 14 L528 27 L494 40 Z"/></g>
+<g id="sp-wordmark"><text x="490" y="925" text-anchor="middle">trajet</text></g>
+</svg></div>
+<script>
+// Лише раз за сесію браузера (холодний старт); при повторних переходах заставку прибираємо ще до показу.
+(() => {
+  const sp = document.getElementById('splash');
+  try { if (sessionStorage.getItem('splash')) { sp.remove(); return; } sessionStorage.setItem('splash', '1'); } catch (e) {}
+  const done = () => sp.remove();
+  sp.addEventListener('animationend', e => { if (e.animationName === 'sp-out') done(); });
+  sp.addEventListener('click', done);  // дотик — пропустити
+  setTimeout(done, matchMedia('(prefers-reduced-motion: reduce)').matches ? 600 : 3000);  // не довше 3 с, навіть без подій
+})();
+</script>"""
+
+
 # Нижнє меню звіту: (ключ, підпис, іконка SVG).
 SECTIONS = [
     ("spend", "Витрати", '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>'),
@@ -528,7 +579,7 @@ SECTIONS = [
 ]
 
 
-def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None, settings_url=""):
+def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None, settings_url="", splash=False):
     """Повна HTML-сторінка звіту. head/nav/flash/viewer/settings_url — додатки від веб-застосунку."""
     d = load(ledger, viewer)
     limit_table = load_limits(limits)
@@ -564,7 +615,7 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
 <html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Наші фінанси</title>{head}
-<style>{CSS}</style></head><body><main>
+<style>{CSS}</style></head><body>{SPLASH if splash else ""}<main>
 <header><h1>Наші фінанси</h1>{nav}</header>
 {flash_html}
 <div class="sticky"><div class="tabs" role="tablist" id="people">{view_tabs}</div>

@@ -13,6 +13,25 @@
   --cat1:#1e3550; --cat2:#739bbf; --cat3:#a9c1da; --cat4:#4a6f94; --cat5:#d0dced; --cat6:#2b4c70; --cat7:#8fb0cf; --cat8:#53677d;
 }
 * { box-sizing:border-box; }
+html { background:var(--bg); } /* без білого спалаху до першого кадру */
+/* Заставка: кінцевий стан — у базових стилях, анімації з backwards, тож без руху видно готовий знак */
+#splash { position:fixed; inset:0; z-index:10; display:grid; place-items:center; padding:24px; background:var(--bg); animation:sp-out .3s 2.2s ease-in forwards; }
+#splash svg { width:min(300px, 72vw); height:auto; overflow:visible; }
+#sp-mountain { animation:sp-rise .7s ease-out backwards; }
+.sp-rim { fill:var(--accent); } .sp-ice { fill:var(--bg); stroke:var(--border); stroke-width:6; } .sp-shade { fill:var(--accent); }
+.sp-snow { fill:var(--surface); stroke:var(--border); stroke-width:6; stroke-linejoin:round; } .sp-snow2 { fill:var(--border); } .sp-rock { fill:var(--text); }
+#sp-path path { fill:none; stroke:var(--text); stroke-width:6px; stroke-linecap:round; stroke-dasharray:1; stroke-dashoffset:0; }
+.sp-low { animation:sp-draw .6s .7s ease-in-out backwards; } .sp-high { animation:sp-draw .35s 1.4s ease-out backwards; }
+.sp-dot { fill:var(--text); stroke:var(--surface); stroke-width:4; animation:sp-fade .2s .6s ease-out backwards; }
+#sp-flag { transform-box:fill-box; transform-origin:0 100%; animation:sp-pop .15s 1.75s ease-out backwards; }
+.sp-pole { stroke:var(--text); stroke-width:6; stroke-linecap:round; } .sp-pennant { fill:var(--text); }
+#sp-wordmark { animation:sp-fade .3s 1.9s ease-out backwards; }
+#sp-wordmark text { fill:var(--text); font:700 150px Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; letter-spacing:-4px; }
+@keyframes sp-rise { from { opacity:0; transform:translateY(24px); } }
+@keyframes sp-draw { from { stroke-dashoffset:1; } }
+@keyframes sp-fade { from { opacity:0; } }
+@keyframes sp-pop { from { opacity:0; transform:scale(.4); } }
+@keyframes sp-out { to { opacity:0; visibility:hidden; } }
 body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; } /* суми однакової ширини цифр */
 main { max-width:720px; margin:0 auto; padding:0 24px calc(160px + env(safe-area-inset-bottom, 0px)); /* кінець сторінки не ховається під «+» (84 + 60 + 16) */ padding-top:env(safe-area-inset-top, 0); }
 header { display:flex; align-items:center; gap:12px; margin:0 -24px; padding:14px 24px; border-bottom:1px solid var(--border); }

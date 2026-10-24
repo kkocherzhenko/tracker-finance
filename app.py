@@ -225,7 +225,7 @@ def index():
     flash = ""
     if "added" in session:
         flash = escape(session.pop("added"))
-    return report.render(LEDGER, head=HEAD, nav=nav(), flash=flash, viewer=me(), settings_url=url_for("limits"))
+    return report.render(LEDGER, head=HEAD, nav=nav(), flash=flash, viewer=me(), settings_url=url_for("limits"), splash=True)
 
 
 def expense_accounts():
