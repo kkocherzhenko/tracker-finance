@@ -35,6 +35,11 @@ def zl(x, decimals=2):
     return f"{x:,.{decimals}f}".replace(",", " ").replace(".", ",") + " зл"
 
 
+def zl_html(x, decimals=0):
+    """Як zl(), але «зл» менше і сірим — для великих сум. zl() лишається текстом для title і тестів."""
+    return zl(x, decimals)[:-3] + '<span class="cur">зл</span>'
+
+
 def pct(a, b, decimals=0):
     return f"{a / b * 100:.{decimals}f}".replace(".", ",") + "%" if b else "—"
 
@@ -143,7 +148,7 @@ def block_categories(d, key, view):
     verdict = f"Найбільша стаття — {rows[0][0].lower()}: {pct(rows[0][1], total)} усіх витрат."
     return f"""
 <section class="card"><h2>Куди йдуть гроші</h2>
-<div class="hero">{zl(total, 0)}</div><div class="sub">витрачено за місяць</div>
+<div class="hero">{zl_html(total)}</div><div class="sub">витрачено за місяць</div>
 <div class="chart">{bars}</div>
 <p class="verdict">{verdict}</p>
 <details><summary>Показати таблицею</summary>
@@ -269,7 +274,7 @@ CSS = """
   --cat1:#1e3550; --cat2:#739bbf; --cat3:#a9c1da; --cat4:#4a6f94; --cat5:#d0dced; --cat6:#2b4c70; --cat7:#8fb0cf; --cat8:#53677d;
 }
 * { box-sizing:border-box; }
-body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; } /* суми однакової ширини цифр */
 main { max-width:720px; margin:0 auto; padding:0 24px calc(112px + env(safe-area-inset-bottom, 0px)); padding-top:env(safe-area-inset-top, 0); }
 header { display:flex; align-items:center; gap:12px; margin:0 -24px; padding:14px 24px; border-bottom:1px solid var(--border); }
 h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em; }
@@ -302,6 +307,7 @@ h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em
 .menu-list a:hover, .menu-list button:hover { background:var(--border); } .menu-list form { margin:0; }
 .card { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:24px; margin:16px 0; }
 h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
+.cur { font-size:.5em; font-weight:500; color:var(--text-muted); margin-left:.15em; letter-spacing:0; }
 .hero { font-size:3.5rem; line-height:1.1; font-weight:600; letter-spacing:-.03em; } .sub { color:var(--text-muted); margin:4px 0 20px; }
 .row { display:grid; grid-template-columns:minmax(90px, 132px) 1fr 76px; align-items:center; gap:10px; margin:8px 0; }
 .name { color:var(--text-muted); font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .val { text-align:right; font-size:.9rem; font-weight:500; white-space:nowrap; }
