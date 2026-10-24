@@ -159,10 +159,13 @@ def month_caption(d, key):
 
 
 def delta_chip(d, key, view, total, partial):
-    """«▲ 12% до серпня»: витрати проти попереднього місяця. Для першого і неповного місяця — нічого."""
+    """«▲ 12% до серпня»: витрати проти попереднього місяця. Для неповного — «дані до …», для першого — нічого."""
+    if partial:
+        last = d["last_day"][key]
+        return f'<span class="chip info">дані до {last.day} {MONTH_GEN[last.month]}</span>'
     i = d["keys"].index(key)
     prev = sum(d["categories"].get((d["keys"][i - 1], view), {}).values()) if i else 0
-    if partial or prev <= 0:
+    if prev <= 0:
         return ""
     up = total > prev
     return (f'<span class="chip {"bad" if up else "good"}">{"▲" if up else "▼"} '
@@ -172,7 +175,7 @@ def delta_chip(d, key, view, total, partial):
 def block_categories(d, key, view, partial):
     rows = sorted(d["categories"][key, view].items(), key=lambda kv: -kv[1])
     if not rows:
-        return '<section class="card"><h2>Куди йдуть гроші</h2><p class="verdict">Витрат за цей місяць немає.</p></section>'
+        return empty("Куди йдуть гроші", SECTIONS[0][2], "Витрат за цей місяць немає.")
     total = sum(v for _, v in rows)
     top = rows[0][1] or Decimal(1)
     bars = "".join(
@@ -236,14 +239,12 @@ def stacked(parts):
 
 def block_savings(d, key, view, partial, private=False):
     if private:
-        return f'<section class="card"><h2>Скільки відкладено</h2><p class="verdict">Доходи й заощадження {view} бачить лише {view}.</p></section>'
+        return empty("Скільки відкладено", LOCK, f"Доходи й заощадження {view} бачить лише {view}.")
     s = d["savings"][key, view]
     income, spent, saved = s["income"], s["spent"], s["saved"]
     if not income:
-        return f"""
-<section class="card"><h2>Скільки відкладено</h2>
-<div class="hero">—</div><div class="sub">доходу за цей місяць у даних ще немає</div>
-<p class="verdict">Витрачено {zl(spent, 0)}. Норму заощаджень порахуємо, коли надійде зарплата.</p></section>"""
+        return empty("Скільки відкладено", SECTIONS[1][2],
+                     f"Доходу за цей місяць у даних ще немає. Витрачено {zl(spent, 0)}. Норму заощаджень порахуємо, коли надійде зарплата.")
     rate = pct(saved, income, 1)
     warn = " Місяць ще не закінчився, тому норма завищена." if partial else ""
     bar = stacked([("Відкладено", saved, "a"), ("Витрати", spent, "b")]) if saved > 0 else ""
@@ -305,6 +306,7 @@ def limits_banner(rows):
 
 
 GAUGE = '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'
+LOCK = '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'
 STATE = {"fine": "В нормі", "near": "Близько", "over": "Перевищено"}
 
 
@@ -317,7 +319,7 @@ def empty(title, svg, text, action=""):
 def block_limits(rows, view, viewer, settings_url, last=None):
     """last — остання дата даних неповного місяця: тоді показуємо позначку «сьогодні» і скільки можна на день."""
     if viewer and view not in ("Разом", viewer):
-        return f'<section class="card"><h2>Ліміти</h2><p class="verdict">Ліміти {view} бачить лише {view}.</p></section>'
+        return empty("Ліміти", LOCK, f"Ліміти {view} бачить лише {view}.")
     if not rows:
         action = f'<a class="btn" href="{settings_url}">Задати ліміт</a>' if settings_url else ""
         return empty("Ліміти", GAUGE, "Лімітів ще немає.", action)
@@ -412,7 +414,7 @@ h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600
 .ring b { font-size:2rem; font-weight:600; letter-spacing:-.02em; line-height:1.1; } .ring small { font-size:.8rem; }
 .sub.center { text-align:center; }
 .chip { display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding:3px 10px; border-radius:999px; font-size:.8rem; font-weight:600; color:var(--text); white-space:nowrap; }
-.chip.bad { background:var(--negative-soft); } .chip.good { background:color-mix(in srgb, var(--positive) 14%, var(--surface)); }
+.chip.bad { background:var(--negative-soft); } .chip.info { background:var(--warning-soft); font-weight:500; } .chip.good { background:color-mix(in srgb, var(--positive) 14%, var(--surface)); }
 .hero { font-size:3.5rem; line-height:1.1; font-weight:600; letter-spacing:-.03em; } .sub { color:var(--text-muted); margin:4px 0 20px; }
 .donut { position:relative; width:160px; height:160px; margin:8px auto 20px; }
 .donut svg { width:100%; height:100%; } .donut circle { fill:none; stroke-width:18; }
