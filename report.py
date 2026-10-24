@@ -127,7 +127,7 @@ def month_caption(d, key):
 def block_categories(d, key, view):
     rows = sorted(d["categories"][key, view].items(), key=lambda kv: -kv[1])
     if not rows:
-        return '<section class="card"><h2>1. Куди йдуть гроші</h2><p class="verdict">Витрат за цей місяць немає.</p></section>'
+        return '<section class="card"><h2>Куди йдуть гроші</h2><p class="verdict">Витрат за цей місяць немає.</p></section>'
     total = sum(v for _, v in rows)
     top = rows[0][1] or Decimal(1)
     bars = "".join(
@@ -142,7 +142,7 @@ def block_categories(d, key, view):
     )
     verdict = f"Найбільша стаття — {rows[0][0].lower()}: {pct(rows[0][1], total)} усіх витрат."
     return f"""
-<section class="card"><h2>1. Куди йдуть гроші</h2>
+<section class="card"><h2>Куди йдуть гроші</h2>
 <div class="hero">{zl(total, 0)}</div><div class="sub">витрачено за місяць</div>
 <div class="chart">{bars}</div>
 <p class="verdict">{verdict}</p>
@@ -166,19 +166,19 @@ def stacked(parts):
 
 def block_savings(d, key, view, partial, private=False):
     if private:
-        return f'<section class="card"><h2>2. Скільки відкладено</h2><p class="verdict">Доходи й заощадження {view} бачить лише {view}.</p></section>'
+        return f'<section class="card"><h2>Скільки відкладено</h2><p class="verdict">Доходи й заощадження {view} бачить лише {view}.</p></section>'
     s = d["savings"][key, view]
     income, spent, saved = s["income"], s["spent"], s["saved"]
     if not income:
         return f"""
-<section class="card"><h2>2. Скільки відкладено</h2>
+<section class="card"><h2>Скільки відкладено</h2>
 <div class="hero">—</div><div class="sub">доходу за цей місяць у даних ще немає</div>
 <p class="verdict">Витрачено {zl(spent, 0)}. Норму заощаджень порахуємо, коли надійде зарплата.</p></section>"""
     rate = pct(saved, income, 1)
     warn = " Місяць ще не закінчився, тому норма завищена." if partial else ""
     bar = stacked([("Відкладено", saved, "a"), ("Витрати", spent, "b")]) if saved > 0 else ""
     return f"""
-<section class="card"><h2>2. Скільки відкладено</h2>
+<section class="card"><h2>Скільки відкладено</h2>
 <div class="hero">{rate}</div><div class="sub">доходу відкладено ({zl(income, 0)} − {zl(spent, 0)})</div>
 {bar}
 <p class="verdict">Відкладено {zl(saved, 0)} із {zl(income, 0)}.{warn}</p></section>"""
@@ -195,7 +195,7 @@ def block_fixed(d, key, view):
         )
         by_person = f'<table class="people"><tr><th>Змінні витрати</th><th>Сума</th></tr>{rows}</table>'
     return f"""
-<section class="card"><h2>3. Фіксовані й змінні</h2>
+<section class="card"><h2>Фіксовані й змінні</h2>
 <div class="hero">{pct(fixed, total)}</div><div class="sub">витрат — фіксовані ({zl(fixed, 0)})</div>
 {stacked([("Змінні", managed, "a"), ("Фіксовані", fixed, "b")])}
 <p class="verdict">Змінних витрат, якими можна керувати, — {zl(managed)}.</p>{by_person}</section>"""
@@ -229,10 +229,10 @@ def limits_banner(rows):
 
 def block_limits(rows, view, viewer, settings_url):
     if viewer and view not in ("Разом", viewer):
-        return f'<section class="card"><h2>4. Ліміти</h2><p class="verdict">Ліміти {view} бачить лише {view}.</p></section>'
+        return f'<section class="card"><h2>Ліміти</h2><p class="verdict">Ліміти {view} бачить лише {view}.</p></section>'
     link = f' <a href="{settings_url}">Налаштувати ліміти</a>' if settings_url else ""
     if not rows:
-        return f'<section class="card"><h2>4. Ліміти</h2><p class="verdict">Лімітів ще немає.{link}</p></section>'
+        return f'<section class="card"><h2>Ліміти</h2><p class="verdict">Лімітів ще немає.{link}</p></section>'
     items = "".join(
         f'<div class="limit {level(s, l)[0]}"><div class="lhead"><span>{escape(n)}</span>'
         f'<span>{zl(s, 0)} з {zl(l, 0)}</span></div>'
@@ -240,7 +240,7 @@ def block_limits(rows, view, viewer, settings_url):
         f'<small>{level(s, l)[1]}</small></div>'
         for n, s, l in rows
     )
-    return f'<section class="card"><h2>4. Ліміти на місяць</h2>{items}<p class="foot">{link}</p></section>'
+    return f'<section class="card"><h2>Ліміти на місяць</h2>{items}<p class="foot">{link}</p></section>'
 
 
 def block_cash(d, key, view):
@@ -259,52 +259,61 @@ def block_cash(d, key, view):
 
 
 CSS = """
-:root { --surface:#f5f5f7; --card:#fff; --ink:#1d1d1f; --ink2:#6e6e73; --line:#e5e5ea; --accent:#0071e3; --muted:#c7c7cc; --warn:#fff4d6; --ok:#e3f5e1; --seg:#e3e3e8; --glass:rgba(245,245,247,.8); --fine:#34c759; --near:#ff9f0a; --over:#ff3b30; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --surface:#000; --card:#1c1c1e; --ink:#f5f5f7; --ink2:#98989d; --line:#2c2c2e; --accent:#0a84ff; --muted:#48484a; --warn:#3a2f0b; --ok:#14331a; --seg:#2c2c2e; --glass:rgba(0,0,0,.75); } }
-:root[data-theme="dark"] { --surface:#000; --card:#1c1c1e; --ink:#f5f5f7; --ink2:#98989d; --line:#2c2c2e; --accent:#0a84ff; --muted:#48484a; --warn:#3a2f0b; --ok:#14331a; --seg:#2c2c2e; --glass:rgba(0,0,0,.75); }
+/* Стиль Boro UI з проєкту Stitch «olya mark tracker»: світлий, без тіней, тонкі рамки, чорні кнопки-пігулки. */
+:root { --surface:#fcfcfa; --card:#fff; --ink:#101112; --ink2:#70757d; --line:#e7e8ea; --accent:#075cf2; --black:#080909; --muted:#d9dbde; --warn:#fff3e0; --seg:#f1f3f5; --field:#f6f7f8; --fine:#1f9d55; --near:#f59e0b; --over:#ba1a1a; }
 * { box-sizing:border-box; }
-body { margin:0; background:var(--surface); color:var(--ink); font:16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
-main { max-width:720px; margin:0 auto; padding:0 16px calc(96px + env(safe-area-inset-bottom, 0px)); padding-top:env(safe-area-inset-top, 0); }
-header { padding:24px 0 8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; } h1 { margin:0; font-size:2.1rem; font-weight:700; letter-spacing:-.02em; flex:1; }
+body { margin:0; background:var(--surface); color:var(--ink); font:16px/1.5 Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+main { max-width:720px; margin:0 auto; padding:0 24px calc(112px + env(safe-area-inset-bottom, 0px)); padding-top:env(safe-area-inset-top, 0); }
+header { display:flex; align-items:center; gap:12px; margin:0 -24px; padding:14px 24px; border-bottom:1px solid var(--line); }
+h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em; }
 .nav { display:flex; gap:8px; align-items:center; }
-.btn { font:inherit; font-size:.95rem; border:0; border-radius:999px; padding:8px 16px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; background:var(--accent); color:#fff; text-decoration:none; cursor:pointer; font-weight:600; }
-.btn.ghost { background:var(--seg); color:var(--ink); font-weight:400; }
-.tabs { display:flex; gap:2px; padding:4px 0; }
-.sticky { position:sticky; top:0; z-index:1; background:var(--glass); backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px); padding:4px 0; }
-.tabs button:first-child { border-radius:9px 0 0 9px; } .tabs button:last-child { border-radius:0 9px 9px 0; }
-.tabs button { flex:1; font:inherit; font-size:.9rem; color:var(--ink); background:var(--seg); border:0; border-radius:0; padding:7px 8px; min-height:44px; cursor:pointer; }
-.tabs button[aria-selected="true"] { background:var(--accent); color:#fff; font-weight:600; }
-.caption { color:var(--ink2); margin:12px 0; } .caption.partial { background:var(--warn); border-radius:12px; padding:8px 14px; color:var(--ink); }
-.flash { position:fixed; z-index:2; left:16px; right:16px; bottom:calc(76px + env(safe-area-inset-bottom, 0px)); max-width:688px; margin:0 auto; background:var(--ink); color:var(--card); border-radius:14px; padding:12px 16px; box-shadow:0 4px 16px rgba(0,0,0,.2); animation:toast 5s forwards; }
+.btn { font:inherit; font-size:1rem; font-weight:600; border:0; border-radius:999px; padding:10px 20px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; background:var(--black); color:#fff; text-decoration:none; cursor:pointer; }
+.btn.ghost { background:var(--seg); color:var(--ink); }
+.btn:active, .tabs button:active, .fab:active { transform:scale(.98); }
+.sticky { position:sticky; top:0; z-index:1; background:var(--surface); padding:12px 0 4px; }
+.tabs { display:flex; }
+#people { background:var(--seg); border-radius:999px; padding:4px; }
+#people button { flex:1; min-height:44px; font:inherit; font-size:.95rem; color:var(--ink); background:none; border:0; border-radius:999px; cursor:pointer; }
+#people button[aria-selected="true"] { background:var(--black); color:#fff; font-weight:600; }
+#months { justify-content:center; gap:4px; margin-top:4px; }
+#months button { min-height:44px; padding:0 12px; font:inherit; font-size:.95rem; font-weight:500; color:var(--ink2); background:none; border:0; border-bottom:2px solid transparent; cursor:pointer; }
+#months button[aria-selected="true"] { color:var(--ink); font-weight:600; border-bottom-color:var(--ink); }
+.caption { color:var(--ink2); margin:20px 0 8px; font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
+.caption.partial { background:var(--warn); border-radius:999px; padding:8px 14px; color:var(--ink); }
+.flash { position:fixed; z-index:2; left:24px; right:24px; bottom:calc(96px + env(safe-area-inset-bottom, 0px)); max-width:672px; margin:0 auto; background:var(--black); color:#fff; border-radius:999px; padding:14px 20px; animation:toast 5s forwards; }
 @keyframes toast { 0%, 85% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
-.alert { background:var(--warn); border-radius:12px; padding:10px 14px; margin:12px 0; }
-.tabbar { position:fixed; z-index:1; left:0; right:0; bottom:0; display:flex; justify-content:center; padding:4px 8px env(safe-area-inset-bottom, 0px); background:var(--glass); backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px); border-top:1px solid var(--line); }
-.tabbar button { flex:1; max-width:180px; min-height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font:inherit; font-size:.72rem; color:var(--ink2); background:none; border:0; cursor:pointer; }
+.alert { background:var(--warn); border:1px solid #f5d9a8; border-radius:24px; padding:14px 18px; margin:16px 0 0; }
+.tabbar { position:fixed; z-index:1; left:0; right:0; bottom:0; display:flex; justify-content:center; padding:6px 8px env(safe-area-inset-bottom, 0px); background:var(--card); border:1px solid var(--line); border-bottom:0; border-radius:28px 28px 0 0; }
+.tabbar button { flex:1; max-width:180px; min-height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font:inherit; font-size:.7rem; color:#a8abb0; background:none; border:0; cursor:pointer; }
 .tabbar button[aria-selected="true"] { color:var(--accent); font-weight:600; }
-.tabbar svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
-.menu { position:relative; } .menu summary { list-style:none; padding:8px 16px; } .menu summary::-webkit-details-marker { display:none; }
-.menu-list { position:absolute; right:0; top:calc(100% + 6px); z-index:3; min-width:200px; display:flex; flex-direction:column; padding:6px; background:var(--card); border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,.18); }
-.menu-list a, .menu-list button { display:flex; align-items:center; width:100%; min-height:44px; padding:0 14px; border:0; border-radius:10px; background:none; color:var(--ink); font:inherit; text-align:left; text-decoration:none; cursor:pointer; }
-.menu-list a:hover, .menu-list button:hover { background:var(--seg); } .menu-list form { margin:0; }
-.limit { margin:12px 0; } .lhead { display:flex; justify-content:space-between; gap:8px; font-size:.95rem; }
-.ltrack { display:block; height:10px; background:var(--seg); border-radius:5px; margin:4px 0 2px; overflow:hidden; }
-.lbar { display:block; height:100%; border-radius:5px; } .fine .lbar { background:var(--fine); } .near .lbar { background:var(--near); } .over .lbar { background:var(--over); }
+.tabbar svg { width:26px; height:26px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.fab { position:fixed; z-index:1; right:max(24px, calc(50% - 336px)); bottom:calc(84px + env(safe-area-inset-bottom, 0px)); width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--black); color:#fff; font-size:2rem; font-weight:300; text-decoration:none; }
+.menu { position:relative; } .menu summary::-webkit-details-marker { display:none; }
+.menu summary { list-style:none; display:flex; align-items:center; min-height:44px; padding:0 16px; border:1.5px solid var(--ink); border-radius:999px; font-weight:600; cursor:pointer; }
+.menu-list { position:absolute; right:0; top:calc(100% + 8px); z-index:3; min-width:210px; display:flex; flex-direction:column; padding:6px; background:var(--card); border:1px solid var(--line); border-radius:24px; }
+.menu-list a, .menu-list button { display:flex; align-items:center; width:100%; min-height:48px; padding:0 16px; border:0; border-radius:18px; background:none; color:var(--ink); font:inherit; text-align:left; text-decoration:none; cursor:pointer; }
+.menu-list a:hover, .menu-list button:hover { background:var(--field); } .menu-list form { margin:0; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:24px; padding:24px; margin:16px 0; }
+h2 { margin:0 0 12px; font-size:.75rem; color:var(--ink2); font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
+.hero { font-size:3.5rem; line-height:1.1; font-weight:600; letter-spacing:-.03em; } .sub { color:var(--ink2); margin:4px 0 20px; }
+.row { display:grid; grid-template-columns:minmax(90px, 132px) 1fr 76px; align-items:center; gap:10px; margin:8px 0; }
+.name { color:var(--ink2); font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .val { text-align:right; font-size:.9rem; font-weight:500; white-space:nowrap; }
+.track { height:14px; } .bar { display:block; height:100%; background:var(--muted); border-radius:0 4px 4px 0; } .row:first-child .bar { background:var(--black); }
+.stack { display:flex; gap:2px; height:14px; }
+.seg { min-width:2px; } .seg:first-child { border-radius:7px 0 0 7px; } .seg:last-child { border-radius:0 7px 7px 0; }
+.a { background:var(--black); } .b { background:var(--muted); }
+.legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-size:.9rem; color:var(--ink2); }
+.sw { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; } .legend b { color:var(--ink); font-weight:600; }
+.limit { padding:14px 0; border-bottom:1px solid var(--line); } .limit:last-of-type { border-bottom:0; }
+.lhead { display:flex; justify-content:space-between; gap:8px; } .lhead span:last-child { font-weight:600; white-space:nowrap; }
+.ltrack { display:block; height:8px; background:var(--seg); border-radius:4px; margin:8px 0 4px; overflow:hidden; }
+.lbar { display:block; height:100%; border-radius:4px; } .fine .lbar { background:var(--fine); } .near .lbar { background:var(--near); } .over .lbar { background:var(--over); }
 .over small { color:var(--over); font-weight:600; }
-summary { padding:10px 0; }
-.card { background:var(--card); border-radius:20px; padding:24px; margin:16px 0; box-shadow:0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04); }
-h2 { margin:0 0 8px; font-size:.95rem; color:var(--ink2); font-weight:600; }
-.hero { font-size:3.25rem; line-height:1.1; font-weight:700; letter-spacing:-.03em; } .sub { color:var(--ink2); margin-bottom:16px; }
-.row { display:grid; grid-template-columns:minmax(90px, 132px) 1fr 76px; align-items:center; gap:10px; margin:6px 0; }
-.name { color:var(--ink2); font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .val { text-align:right; font-size:.9rem; white-space:nowrap; }
-.track { height:14px; } .bar { display:block; height:100%; background:var(--accent); border-radius:0 7px 7px 0; }
-.stack { display:flex; gap:2px; height:18px; }
-.seg { min-width:2px; } .seg:first-child { border-radius:9px 0 0 9px; } .seg:last-child { border-radius:0 9px 9px 0; }
-.a { background:var(--accent); } .b { background:var(--muted); }
-.legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; font-size:.9rem; color:var(--ink2); }
-.sw { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; } .legend b { color:var(--ink); font-weight:600; }
 .verdict { margin:16px 0 0; }
-details { margin-top:12px; color:var(--ink2); } summary { cursor:pointer; }
-table { width:100%; border-collapse:collapse; margin-top:8px; } td, th { padding:5px 6px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+a { color:var(--accent); }
+details { margin-top:12px; color:var(--ink2); } summary { cursor:pointer; padding:10px 0; }
+table { width:100%; border-collapse:collapse; margin-top:8px; } td, th { padding:12px 6px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+th { font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--ink2); }
 td:last-child, th:last-child { text-align:right; white-space:nowrap; }
 small { color:var(--ink2); }
 .month[hidden] { display:none; }
