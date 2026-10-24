@@ -284,8 +284,15 @@ def level(spent, limit):
 
 
 def limits_banner(rows):
-    hot = [f"{escape(n)}: {level(s, l)[1]}" for n, s, l in rows if level(s, l)[0] != "fine"]
-    return f'<p class="alert" role="alert"><b>Увага, ліміти.</b> {" · ".join(hot)}</p>' if hot else ""
+    """Заголовок і рядок плашок, що гортається вбік; дотик відкриває вкладку «Ліміти»."""
+    chips = "".join(
+        f'<span class="achip {level(s, l)[0]}">{escape(n)} <b>{f"+{zl(s - l, 0)}" if s > l else pct(s, l)}</b></span>'
+        for n, s, l in rows if level(s, l)[0] != "fine"
+    )
+    if not chips:
+        return ""
+    return (f'<div class="alert" role="alert"><button type="button" class="atitle">Увага, ліміти <span aria-hidden="true">›</span></button>'
+            f'<div class="achips">{chips}</div></div>')
 
 
 GAUGE = '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'
@@ -372,7 +379,10 @@ h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em
 .caption.partial { background:var(--warning-soft); border-radius:999px; padding:8px 14px; color:var(--text); }
 .flash { position:fixed; z-index:2; left:24px; right:24px; bottom:calc(96px + env(safe-area-inset-bottom, 0px)); max-width:672px; margin:0 auto; background:var(--accent-strong); color:var(--on-accent); border-radius:999px; padding:14px 20px; animation:toast 5s forwards; }
 @keyframes toast { 0%, 85% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
-.alert { background:var(--warning-soft); border:1px solid color-mix(in srgb, var(--warning) 35%, var(--surface)); border-radius:24px; padding:14px 18px; margin:16px 0 0; }
+.alert { background:var(--surface); border:1px solid color-mix(in srgb, var(--warning) 40%, var(--surface)); border-radius:24px; padding:12px 16px; margin:16px 0 0; cursor:pointer; }
+.atitle { display:block; width:100%; min-height:32px; padding:0; border:0; background:none; font:inherit; font-weight:600; color:var(--text); text-align:left; cursor:pointer; }
+.achips { display:flex; gap:8px; margin-top:6px; overflow-x:auto; white-space:nowrap; scrollbar-width:none; } .achips::-webkit-scrollbar { display:none; }
+.achip { flex:none; padding:6px 12px; border-radius:999px; font-size:.85rem; } .achip.over { background:var(--negative-soft); } .achip.near { background:var(--warning-soft); }
 .tabbar { position:fixed; z-index:1; left:0; right:0; bottom:0; display:flex; justify-content:center; padding:6px 8px env(safe-area-inset-bottom, 0px); background:var(--surface); border:1px solid var(--border); border-bottom:0; border-radius:28px 28px 0 0; }
 .tabbar button { flex:1; max-width:180px; min-height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font:inherit; font-size:.7rem; color:var(--text-muted); background:none; border:0; cursor:pointer; }
 .tabbar button[aria-selected="true"] { color:var(--accent-strong); font-weight:600; } .tabbar button[aria-selected="true"] svg { stroke:var(--accent); }
@@ -502,6 +512,7 @@ st.forEach(t => t.addEventListener('click', () => {{ s = t.dataset.s; show(); sc
 // Меню в шапці закривається дотиком будь-де поза ним.
 document.addEventListener('click', e => document.querySelectorAll('details.menu[open]').forEach(x => x.contains(e.target) || x.removeAttribute('open')));
 mt.forEach(t => t.addEventListener('click', () => {{ m = t.dataset.m; show(); }}));
+document.querySelectorAll('.alert').forEach(a => a.addEventListener('click', () => {{ s = 'limits'; show(); scrollTo(0, 0); }}));
 const has = (list, key, v) => [...list].some(t => t.dataset[key] === v);
 try {{ const s = JSON.parse(localStorage.getItem('view') || '{{}}'); if (has(pt, 'p', s.p)) p = s.p; if (has(mt, 'm', s.m)) m = s.m; }} catch (e) {{}}
 const q = new URLSearchParams(location.search);
