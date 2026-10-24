@@ -185,9 +185,6 @@ def block_categories(d, key, view, partial):
         f'<span class="track"><span class="bar" style="width:{max(v, 0) / top * 100:.1f}%"></span></span></span></div>'
         for n, v in rows
     )
-    table = "".join(
-        f"<tr><td>{escape(n)}</td><td>{zl(v)}</td><td>{pct(v, total)}</td></tr>" for n, v in rows
-    )
     legend = "".join(
         f'<li><i class="sw" style="background:var(--cat{i % 8 + 1}){"; opacity:.6" if i >= 8 else ""}"></i>{escape(n)} <b>{pct(v, total)}</b></li>'
         for i, (n, v) in enumerate(rows)
@@ -199,9 +196,7 @@ def block_categories(d, key, view, partial):
 <div class="slides" tabindex="0" aria-label="Витрати: список і діаграма, стрілки вліво і вправо перемикають">
 <div class="slide"><div class="hero">{zl_html(total)}</div><div class="sub">витрачено за місяць {delta_chip(d, key, view, total, partial)}</div>
 <div class="chart">{bars}</div>
-<p class="verdict">{verdict}</p>
-<details><summary>Показати таблицею</summary>
-<table><tr><th>Категорія</th><th>Сума</th><th>Частка</th></tr>{table}</table></details></div>
+<p class="verdict">{verdict}</p></div>
 <div class="slide">{donut(rows, total)}<ul class="dlegend">{legend}</ul></div>
 </div>
 <div class="dots"><button type="button" aria-label="Список" aria-current="true"></button><button type="button" aria-label="Діаграма" aria-current="false"></button></div>
