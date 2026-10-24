@@ -30,6 +30,7 @@ from werkzeug.security import check_password_hash
 
 import cashbook
 import report
+from ui_strings import say
 
 ROOT = Path(__file__).parent
 LEDGER = ROOT / "main.beancount"
@@ -173,7 +174,7 @@ def error_html(error):
 
 
 def nav():
-    return f"""<a class="fab" href="{url_for('add')}" aria-label="Додати готівку">+</a>
+    return f"""<a class="fab" href="{url_for('add')}" aria-label="Додати готівку"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
 <details class="menu"><summary aria-label="Меню: {me()}">{me()}</summary>
 <div class="menu-list"><a href="{url_for('add')}">+ Готівка</a><a href="{url_for('limits')}">Ліміти</a>
 <form method="post" action="{url_for('logout')}"><input type="hidden" name="csrf" value="{csrf_token()}">
@@ -257,8 +258,8 @@ def add():
             except ValueError as e:
                 error = str(e)
             else:
-                kind = "спільна" if entry["shared"] else "особиста"
-                session["added"] = f"Додано: {entry['description']}, {report.zl(entry['amount'])} ({kind})."
+                session["added"] = say("added", amount=report.zl(entry["amount"]), kind="спільна" if entry["shared"] else "особиста",
+                                       category=report.category_name(entry["account"].rsplit(":", 1)[1]))
                 return redirect(f"{url_for('index')}?p={entry['person']}&m={entry['date']:%Y-%m}")
     cats = "".join(
         f'<label class="cat"><input type="radio" name="account" value="{a}" required{" checked" if a == form["account"] else ""}>'

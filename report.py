@@ -68,7 +68,7 @@ def zl(x, decimals=2):
 
 def zl_html(x, decimals=0):
     """Як zl(), але «зл» менше і сірим — для великих сум. zl() лишається текстом для title і тестів."""
-    return zl(x, decimals)[:-3] + '<span class="cur">зл</span>'
+    return f'<span class="num" data-n="{x:.{decimals}f}">{zl(x, decimals)[:-3]}</span><span class="cur">зл</span>'
 
 
 def pct(a, b, decimals=0):
@@ -546,13 +546,18 @@ th { font-size:.9rem; color:var(--text-muted); } td:last-child, th:last-child { 
 .tabbar button { flex:1; max-width:180px; min-height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; border:0; border-top:2px solid transparent; background:none; color:var(--text-muted); font:inherit; font-size:.72rem; cursor:pointer; }
 .tabbar button[aria-selected="true"] { color:var(--text); font-weight:600; border-top-color:var(--accent-strong); }
 .tabbar svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
-.fab { position:fixed; z-index:1; right:max(24px, calc(50% - 336px)); bottom:calc(84px + env(safe-area-inset-bottom, 0px)); width:60px; height:60px; border-radius:var(--r-full); display:flex; align-items:center; justify-content:center; background:var(--accent-strong); color:var(--on-accent); font-size:2rem; font-weight:300; text-decoration:none; box-shadow:var(--lift); }
+/* «+» — по центру нижнього меню, над ним; суми праворуч, тож кнопка їх не закриває */
+.fab { position:fixed; z-index:2; left:calc(50% - 32px); bottom:calc(18px + env(safe-area-inset-bottom, 0px)); width:64px; height:64px; border-radius:var(--r-full); display:flex; align-items:center; justify-content:center; background:var(--accent-strong); color:var(--on-accent); text-decoration:none; box-shadow:var(--lift); }
+.fab svg { width:28px; height:28px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; }
+.tabbar.has-fab button:nth-child(2) { margin-right:80px; }
 .menu { position:relative; } .menu summary::-webkit-details-marker { display:none; }
 .menu summary { list-style:none; display:flex; align-items:center; min-height:44px; padding:0 16px; border:1px solid var(--text-muted); border-radius:var(--r-full); font-weight:600; cursor:pointer; }
 .menu-list { position:absolute; right:0; top:calc(100% + 8px); z-index:3; min-width:210px; display:flex; flex-direction:column; padding:6px; background:var(--surface); border-radius:var(--r-m); box-shadow:var(--lift); }
 .menu-list a, .menu-list button { display:flex; align-items:center; width:100%; min-height:48px; padding:0 14px; border:0; border-radius:var(--r-s); background:none; color:var(--text); font:inherit; text-align:left; text-decoration:none; cursor:pointer; }
 .menu-list a:hover, .menu-list button:hover { background:var(--soft); } .menu-list form { margin:0; }
-.flash { position:fixed; z-index:2; left:24px; right:24px; bottom:calc(80px + env(safe-area-inset-bottom, 0px)); max-width:672px; margin:0 auto; padding:14px 18px; border-radius:var(--r-m); background:var(--text); color:var(--on-accent); box-shadow:var(--lift); animation:toast 5s forwards; }
+.flash { display:flex; align-items:center; gap:10px; position:fixed; z-index:3; left:24px; right:24px; bottom:calc(96px + env(safe-area-inset-bottom, 0px)); max-width:672px; margin:0 auto; padding:14px 18px; border-radius:var(--r-m); background:var(--text); color:var(--on-accent); box-shadow:var(--lift); animation:toast 5s forwards; }
+.tick { flex:none; width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:24; animation:tickdraw .4s .1s ease-out backwards; }
+@keyframes tickdraw { from { stroke-dashoffset:24; } }
 @keyframes toast { 0%, 85% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
 .month[hidden] { display:none; }
 .foot { color:var(--text-muted); font-size:.85rem; }
@@ -608,7 +613,8 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
                 f'<div data-s="fixed" hidden>{block_fixed(d, k, v)}</div>'
                 f'<div data-s="limits" hidden>{block_limits(rows, v, viewer, settings_url, d["last_day"][k] if partial else None)}</div></div>'
             )
-    flash_html = f'<p class="flash" role="status">{flash}</p>' if flash else ""
+    tick = '<svg class="tick" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>'
+    flash_html = f'<p class="flash" role="status">{tick}{flash}</p>' if flash else ""
     return f"""<!doctype html>
 <html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -621,7 +627,7 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
 {''.join(panels)}
 <p class="foot">* місяць ще не закінчився. Дані: виписки Олі й Марка за 1 серпня — 15 жовтня 2026 і готівка, додана з телефону; злоті.</p>
 </main>
-<nav class="tabbar" role="tablist" id="sections">{"".join(
+<nav class="tabbar{" has-fab" if nav else ""}" role="tablist" id="sections">{"".join(
     f'<button role="tab" data-s="{k}" aria-selected="{str(k == "spend").lower()}"><svg viewBox="0 0 24 24" aria-hidden="true">{icon}</svg>{label}</button>'
     for k, label, icon in SECTIONS)}</nav>
 <script>
@@ -665,6 +671,12 @@ st.forEach(t => t.addEventListener('click', () => {{ s = t.dataset.s; show(); sc
 document.addEventListener('click', e => document.querySelectorAll('details.menu[open]').forEach(x => x.contains(e.target) || x.removeAttribute('open')));
 mt.forEach(t => t.addEventListener('click', () => {{ m = t.dataset.m; show(); }}));
 if (document.querySelector('.flash')) navigator.vibrate?.(10);  // відгук після збереження готівки
+// Велика сума один раз «набігає» від нуля (400 мс); без JS чи з «менше руху» — одразу готове число.
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('.month:not([hidden]) .hero .num').forEach(el => {{
+  const end = parseFloat(el.dataset.n), t0 = performance.now(), fmt = v => Math.round(v).toString().replace(/\\B(?=(\\d{{3}})+(?!\\d))/g, ' ');
+  const tick = t => {{ const k = Math.min((t - t0) / 400, 1); el.textContent = fmt(end * (1 - (1 - k) ** 3)); if (k < 1) requestAnimationFrame(tick); }};
+  requestAnimationFrame(tick);
+}});
 document.querySelectorAll('.alert').forEach(a => a.addEventListener('click', () => {{ s = 'limits'; show(); scrollTo(0, 0); }}));
 const has = (list, key, v) => [...list].some(t => t.dataset[key] === v);
 try {{ const s = JSON.parse(localStorage.getItem('view') || '{{}}'); if (has(pt, 'p', s.p)) p = s.p; if (has(mt, 'm', s.m)) m = s.m; }} catch (e) {{}}
