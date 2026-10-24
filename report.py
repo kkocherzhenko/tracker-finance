@@ -189,14 +189,13 @@ def block_categories(d, key, view, partial):
         f'<li><i class="sw" style="background:var(--cat{i % 8 + 1}){"; opacity:.6" if i >= 8 else ""}"></i>{escape(n)} <b>{pct(v, total)}</b></li>'
         for i, (n, v) in enumerate(rows)
     )
-    verdict = f"Найбільша стаття — {rows[0][0].lower()}: {pct(rows[0][1], total)} усіх витрат."
     # Два слайди однієї картки (scroll-snap): 1 — сума і список, 2 — кільце із сумою в центрі. Сума видна один раз.
     return f"""
 <section class="card spend"><div class="cardhead"><h2>Куди йдуть гроші</h2><button type="button" class="slidetoggle">Діаграма</button></div>
 <div class="slides" tabindex="0" aria-label="Витрати: список і діаграма, стрілки вліво і вправо перемикають">
 <div class="slide"><div class="hero">{zl_html(total)}</div><div class="sub">витрачено за місяць {delta_chip(d, key, view, total, partial)}</div>
 <div class="chart">{bars}</div>
-<p class="verdict">{verdict}</p></div>
+</div>
 <div class="slide">{donut(rows, total)}<ul class="dlegend">{legend}</ul></div>
 </div>
 <div class="dots"><button type="button" aria-label="Список" aria-current="true"></button><button type="button" aria-label="Діаграма" aria-current="false"></button></div>
@@ -610,7 +609,6 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
 <div class="sticky"><div class="tabs" role="tablist" id="people">{view_tabs}</div>
 <div class="tabs" role="tablist" id="months">{''.join(month_tabs)}</div></div>
 {''.join(panels)}
-<p class="foot">Дані: виписки Олі й Марка за 1 серпня — 15 жовтня 2026 і готівка, додана з телефону; злоті.</p>
 </main>
 <nav class="tabbar" role="tablist" id="sections">{"".join(
     f'<button role="tab" data-s="{k}" aria-selected="{str(k == "spend").lower()}"><svg viewBox="0 0 24 24" aria-hidden="true">{icon}</svg>{label}</button>'

@@ -173,9 +173,9 @@ def error_html(error):
 
 
 def nav():
-    return f"""<a class="fab" href="{url_for('add')}" aria-label="Додати готівку">+</a>
+    return f"""<a class="fab" href="{url_for('add')}" aria-label="Нова транзакція">+</a>
 <details class="menu"><summary aria-label="Меню: {me()}">{me()}</summary>
-<div class="menu-list"><a href="{url_for('add')}">+ Готівка</a><a href="{url_for('limits')}">Ліміти</a>
+<div class="menu-list"><a href="{url_for('add')}">+ Нова транзакція</a><a href="{url_for('limits')}">Ліміти</a>
 <form method="post" action="{url_for('logout')}"><input type="hidden" name="csrf" value="{csrf_token()}">
 <button type="submit">Вийти</button></form></div></details>"""
 
@@ -275,8 +275,8 @@ def add():
         f'<label><input type="radio" name="shared" value="{v}"{" checked" if v == form["shared"] else ""}><span>{label}</span></label>'
         for v, label in (("ні", "Особиста"), ("так", "Спільна"))
     )
-    return page("Додати готівку", f"""
-<header><h1>Готівка</h1><nav class="nav"><a class="btn ghost" href="{url_for('index')}">До звіту</a></nav></header>
+    return page("Нова транзакція", f"""
+<header><h1>Нова транзакція</h1><nav class="nav"><a class="btn ghost" href="{url_for('index')}">До звіту</a></nav></header>
 <form method="post" class="pay">
 <input type="hidden" name="csrf" value="{csrf_token()}">
 <section class="card">
@@ -301,8 +301,7 @@ function syncDate() {{
 }}
 f.querySelectorAll('[name=when]').forEach(r => r.addEventListener('change', syncDate));
 syncDate();
-</script>
-<p class="foot">Платить {me()}. Особисту витрату бачите лише ви, спільну — обоє.</p>""")
+</script>""")
 
 
 def money(text):
