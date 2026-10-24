@@ -56,6 +56,20 @@ def icon(name):
     return f'<span aria-hidden="true">{escape(name[:1])}</span>'
 
 
+# Колір категорії — за назвою, не за місцем у списку: та сама категорія того самого кольору в будь-якому місяці й виді.
+CATEGORY_COLORS = {"Житло": "housing", "Продукти": "groceries", "Доставка їжі": "delivery", "Кафе": "cafe",
+                   "Транспорт": "transport", "Підписки": "subscriptions", "Краса і побут": "beauty",
+                   "Мобільний оператор": "mobile", "Спорт": "gold", "Інтернет": "grey", "Електрика": "olive",
+                   "Розваги": "taupe", "Покупки": "plum", "Інше": "grey", "Без категорії": "grey"}
+# Спорт й Інтернет у Марка щомісяця, а Електрика, Розваги й Покупки трапляються попарно — тому 5 додаткових кольорів, не 4.
+EXTRA_COLORS = ["gold", "olive", "taupe", "grey", "plum"]
+
+
+def cat_color(name):
+    """CSS-колір категорії; нова, невідома категорія отримує сталий колір з EXTRA_COLORS за назвою."""
+    return f"var(--cat-{CATEGORY_COLORS.get(name) or EXTRA_COLORS[sum(map(ord, name)) % len(EXTRA_COLORS)]})"
+
+
 def category_name(leaf):
     return CATEGORY_NAMES.get(leaf, leaf.replace("-", " ").capitalize())
 
@@ -179,19 +193,19 @@ def block_categories(d, key, view, partial):
     total = sum(v for _, v in rows)
     top = rows[0][1] or Decimal(1)
     bars = "".join(
-        f'<div class="row" title="{escape(n)}: {zl(v)}, {pct(v, total)} витрат">'
+        f'<div class="row" style="--c:{cat_color(n)}" title="{escape(n)}: {zl(v)}, {pct(v, total)} витрат">'
         f'<span class="ico">{icon(n)}</span><span class="name">{escape(n)}</span><span class="val">{zl(v, 0)}</span>'
         f'<span class="meta"><small>{pct(v, total)}</small>'
         f'<span class="track"><span class="bar" style="width:{max(v, 0) / top * 100:.1f}%"></span></span></span></div>'
         for n, v in rows
     )
     legend = "".join(
-        f'<li><i class="sw" style="background:var(--cat{i % 8 + 1}){"; opacity:.6" if i >= 8 else ""}"></i>{escape(n)} <b>{pct(v, total)}</b></li>'
+        f'<li><i class="sw" style="background:{cat_color(n)}"></i>{escape(n)} <b>{pct(v, total)}</b></li>'
         for i, (n, v) in enumerate(rows)
     )
     # Два слайди однієї картки (scroll-snap): 1 — сума і список, 2 — кільце із сумою в центрі. Сума видна один раз.
     return f"""
-<section class="card spend"><div class="cardhead"><h2>Куди йдуть гроші</h2><button type="button" class="slidetoggle">Діаграма</button></div>
+<section class="card spend"><div class="cardhead"><button type="button" class="slidetoggle">Діаграма</button></div>
 <div class="slides" tabindex="0" aria-label="Витрати: список і діаграма, стрілки вліво і вправо перемикають">
 <div class="slide"><div class="hero">{zl_html(total)}</div><div class="sub">витрачено за місяць {delta_chip(d, key, view, total, partial)}</div>
 <div class="chart">{bars}</div>
@@ -203,16 +217,17 @@ def block_categories(d, key, view, partial):
 
 
 def donut(rows, total):
-    """Кільце до 320 px (масштабується з viewBox): сегменти в порядку рядків, кольори --cat1..8 (понад 8 — ті самі з прозорістю), проміжки 2 px."""
+    """Кільце до 320 px: сегменти в порядку рядків, колір — за категорією, проміжки 2 px; частки менше 1,5% — мінімальна видима дуга."""
     r, c = 71, 2 * math.pi * 71
+    shares = [max(float(max(v, 0) / total), .015) if total > 0 and v > 0 else 0 for _, v in rows]
+    norm = sum(shares) or 1
     segs, start = [], 0.0
-    for i, (_, v) in enumerate(rows):
-        share = float(max(v, 0) / total) if total > 0 else 0
-        if share * c > 2:
-            fade = "; opacity:.6" if i >= 8 else ""
-            segs.append(f'<circle r="{r}" cx="80" cy="80" style="stroke:var(--cat{i % 8 + 1}){fade}" '
-                        f'stroke-dasharray="{share * c - 2:.2f} {c:.2f}" stroke-dashoffset="{-start:.2f}"/>')
-        start += share * c
+    for (n, _), share in zip(rows, shares):
+        length = share / norm * c
+        if length > 2:
+            segs.append(f'<circle r="{r}" cx="80" cy="80" style="stroke:{cat_color(n)}" '
+                        f'stroke-dasharray="{length - 2:.2f} {c:.2f}" stroke-dashoffset="{-start:.2f}"/>')
+        start += length
     return (f'<div class="donut"><svg viewBox="0 0 160 160" aria-hidden="true"><g transform="rotate(-90 80 80)">{"".join(segs)}</g></svg>'
             f'<div><b>{zl_html(total)}</b><small>витрачено</small></div></div>')
 
@@ -401,6 +416,9 @@ CSS = """
   --accent:#739bbf; --accent-strong:#2b4c70; --on-accent:#fff;
   --positive:#2f7a59; --negative:#c2534b; --warning:#946a1e;
   --warning-soft:color-mix(in srgb, var(--warning) 12%, var(--surface)); --negative-soft:color-mix(in srgb, var(--negative) 12%, var(--surface));
+  /* Кольори категорій (донат, легенда, точки й смуги списку). Контраст до білої картки ≥ 3:1; не плутаються з червоним/жовтим/зеленим лімітів. */
+  --cat-housing:#1f3350; --cat-groceries:#3fa369; --cat-delivery:#e47635; --cat-cafe:#843625; --cat-transport:#6c8ebf; --cat-subscriptions:#8a6fbf;
+  --cat-beauty:#d5769d; --cat-mobile:#40a0b0; --cat-gold:#9c8320; --cat-olive:#7a8b3d; --cat-taupe:#8c7a6b; --cat-grey:#8996a4; --cat-plum:#642645;
   --cat1:#1e3550; --cat2:#739bbf; --cat3:#a9c1da; --cat4:#4a6f94; --cat5:#d0dced; --cat6:#2b4c70; --cat7:#8fb0cf; --cat8:#53677d;
 }
 * { box-sizing:border-box; }
@@ -480,8 +498,6 @@ h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600
 .name { grid-area:name; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .val { grid-area:val; text-align:right; font-weight:600; white-space:nowrap; }
 .meta { grid-area:meta; display:flex; align-items:center; gap:8px; } .meta small { min-width:2.6em; font-size:.8rem; }
 .track { flex:1; height:6px; background:color-mix(in srgb, var(--border) 40%, var(--surface)); /* світліше за --cat5, щоб її смугу було видно */ border-radius:3px; overflow:hidden; } .bar { display:block; height:100%; background:var(--c, var(--accent)); border-radius:3px; }
-.row:nth-child(8n+1) { --c:var(--cat1); } .row:nth-child(8n+2) { --c:var(--cat2); } .row:nth-child(8n+3) { --c:var(--cat3); } .row:nth-child(8n+4) { --c:var(--cat4); } .row:nth-child(8n+5) { --c:var(--cat5); } .row:nth-child(8n+6) { --c:var(--cat6); } .row:nth-child(8n+7) { --c:var(--cat7); } .row:nth-child(8n+0) { --c:var(--cat8); }
-.row:nth-child(n+9) .bar { opacity:.6; } /* понад 8 категорій — ті самі кольори, але прозоріші */
 .stack { display:flex; gap:2px; height:14px; }
 .seg { min-width:2px; } .seg:first-child { border-radius:7px 0 0 7px; } .seg:last-child { border-radius:0 7px 7px 0; }
 .a { background:var(--cat1); } .b { background:var(--cat2); }
@@ -507,7 +523,7 @@ h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600
 @keyframes rise { from { opacity:0; transform:translateY(6px); } }
 .bar { transform-origin:left; animation:grow .4s ease-out; } .donut circle { animation:draw .4s ease-out; }
 .btn:active, .tabs button:active, .fab:active, .tabbar button:active, .alert:active { transform:scale(.98); }
-.cardhead { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; } .cardhead h2 { margin:0; }
+.cardhead { display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-bottom:8px; } .cardhead h2 { margin:0; }
 .slidetoggle { min-height:44px; padding:0 14px; border:0; border-radius:999px; background:var(--border); color:var(--text); font:inherit; font-size:.85rem; font-weight:600; cursor:pointer; }
 .slides { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none; }
 .slides::-webkit-scrollbar { display:none; } .slides:focus-visible { outline:2px solid var(--accent); outline-offset:4px; border-radius:12px; }
