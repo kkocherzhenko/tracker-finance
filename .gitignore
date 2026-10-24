@@ -12,3 +12,7 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# Замок і тимчасовий файл атомарного запису готівки
+.cash.lock
+cash.beancount.tmp

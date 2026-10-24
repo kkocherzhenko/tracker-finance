@@ -142,7 +142,32 @@ td:last-child, th:last-child { text-align:right; white-space:nowrap; }
 small { color:var(--text-muted); }
 .month[hidden] { display:none; }
 .foot { color:var(--text-muted); font-size:.85rem; }
-.editlink { display:inline-flex; align-items:center; min-height:44px; font-size:.9rem; }
+/* Готівка: картка → шторка зі списком; рядок смахується вліво (scroll-snap) і показує «Змінити» / «Видалити» */
+html.locked { overflow:hidden; }
+.cashcard { display:block; width:100%; margin:16px 0; padding:12px 16px; border:1px solid var(--border); border-radius:24px; background:var(--surface); color:var(--text); font:inherit; text-align:left; cursor:pointer; }
+.sheet { position:fixed; inset:auto 0 0; width:100%; max-width:720px; max-height:85vh; margin:0 auto; padding:0; border:0; border-radius:24px 24px 0 0; background:var(--surface); color:var(--text); overflow:auto; overscroll-behavior:contain; animation:sheet-in .25s ease-out; }
+.sheet::backdrop { background:color-mix(in srgb, var(--text) 45%, transparent); }
+@keyframes sheet-in { from { transform:translateY(100%); } }
+.sheetin { padding:8px 20px calc(20px + env(safe-area-inset-bottom, 0px)); }
+.sheethead { position:relative; display:flex; align-items:center; gap:8px; padding:18px 0 8px; touch-action:none; }
+.handle { position:absolute; top:4px; left:50%; width:40px; height:5px; margin-left:-20px; border-radius:3px; background:var(--border); }
+.sheethead h2 { flex:1; margin:0; color:var(--text); font-size:1.1rem; letter-spacing:0; text-transform:none; } .sheethead h2 small { display:block; color:var(--text-muted); font-size:.85rem; font-weight:400; }
+.sheetclose { width:44px; height:44px; flex:none; border:0; border-radius:50%; background:var(--border); color:var(--text); font-size:1.5rem; line-height:1; cursor:pointer; }
+.cashlist { list-style:none; margin:0; padding:0; }
+.crow { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none; border-bottom:1px solid var(--border); }
+.crow::-webkit-scrollbar { display:none; } .crow:last-child { border-bottom:0; }
+.cbody { flex:0 0 100%; scroll-snap-align:start; display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; gap:12px; min-height:56px; padding:12px 0; border:0; background:none; color:var(--text); font:inherit; text-align:left; }
+button.cbody { cursor:pointer; }
+.cdate { color:var(--text-muted); font-size:.85rem; white-space:nowrap; } .cdesc small { display:block; } .camt { font-weight:600; white-space:nowrap; }
+.cacts { flex:none; display:flex; scroll-snap-align:end; }
+.cacts a, .cacts button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; width:84px; border:0; color:var(--on-accent); font:inherit; font-size:.85rem; font-weight:600; text-decoration:none; cursor:pointer; }
+.cedit { background:var(--accent-strong); } .cdel, .btn.danger { background:var(--negative); color:var(--on-accent); }
+.cacts svg, .btn.danger svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.btn.danger { gap:8px; }
+.actsheet .sheetin, .acts-main, .acts-confirm { display:flex; flex-direction:column; gap:8px; } .acts-main[hidden], .acts-confirm[hidden] { display:none; }
+.actq { margin:0; font-weight:600; }
+.flash.undo { animation-duration:6s; } .flash form { margin:0; }
+.undo { min-height:44px; padding:0 8px; border:0; background:none; color:var(--on-accent); font:inherit; font-weight:600; text-decoration:underline; cursor:pointer; }
 </style></head><body><main>
 <header><h1><a class="brand" href="/" aria-label="Trajet"><svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true" focusable="false">
 <defs><mask id="trajet-road" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32"><rect width="32" height="32" fill="#fff"/>
@@ -263,9 +288,7 @@ small { color:var(--text-muted); }
 <div class="slide"><div class="donut"><svg viewBox="0 0 160 160" aria-hidden="true"><g transform="rotate(-90 80 80)"><circle r="71" cx="80" cy="80" style="stroke:var(--cat-housing)" stroke-dasharray="208.87 446.11" stroke-dashoffset="-0.00"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-groceries)" stroke-dasharray="106.20 446.11" stroke-dashoffset="-210.87"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-gold)" stroke-dasharray="22.09 446.11" stroke-dashoffset="-319.06"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-delivery)" stroke-dasharray="21.44 446.11" stroke-dashoffset="-343.16"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-transport)" stroke-dasharray="17.51 446.11" stroke-dashoffset="-366.60"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-cafe)" stroke-dasharray="13.46 446.11" stroke-dashoffset="-386.11"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-subscriptions)" stroke-dasharray="9.83 446.11" stroke-dashoffset="-401.56"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-plum)" stroke-dasharray="4.54 446.11" stroke-dashoffset="-413.39"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-grey)" stroke-dasharray="4.54 446.11" stroke-dashoffset="-419.93"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-taupe)" stroke-dasharray="4.54 446.11" stroke-dashoffset="-426.48"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-mobile)" stroke-dasharray="4.54 446.11" stroke-dashoffset="-433.02"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-beauty)" stroke-dasharray="4.54 446.11" stroke-dashoffset="-439.56"/></g></svg><div><b>6 619<span class="cur">зл</span></b><small>витрачено</small></div></div><ul class="dlegend"><li><i class="sw" style="background:var(--cat-housing)"></i>Житло <b>48%</b></li><li><i class="sw" style="background:var(--cat-groceries)"></i>Продукти <b>25%</b></li><li><i class="sw" style="background:var(--cat-gold)"></i>Спорт <b>6%</b></li><li><i class="sw" style="background:var(--cat-delivery)"></i>Доставка їжі <b>5%</b></li><li><i class="sw" style="background:var(--cat-transport)"></i>Транспорт <b>4%</b></li><li><i class="sw" style="background:var(--cat-cafe)"></i>Кафе <b>4%</b></li><li><i class="sw" style="background:var(--cat-subscriptions)"></i>Підписки <b>3%</b></li><li><i class="sw" style="background:var(--cat-plum)"></i>Покупки <b>1%</b></li><li><i class="sw" style="background:var(--cat-grey)"></i>Інтернет <b>1%</b></li><li><i class="sw" style="background:var(--cat-taupe)"></i>Розваги <b>1%</b></li><li><i class="sw" style="background:var(--cat-mobile)"></i>Мобільний оператор <b>1%</b></li><li><i class="sw" style="background:var(--cat-beauty)"></i>Краса і побут <b>1%</b></li></ul></div>
 </div>
 <div class="dots"><button type="button" aria-label="Список" aria-current="true"></button><button type="button" aria-label="Діаграма" aria-current="false"></button></div>
-<p class="swipehint" hidden>Свайпніть, щоб побачити діаграму</p></section>
-<section class="card"><h2>Готівка, додана з телефону</h2>
-<table class="cash"><tr><td>23 жовтня</td><td>Оля</td><td>пиво<br><small>Продукти</small></td><td>1,00 зл</td></tr></table></section></div><div data-s="save" hidden>
+<p class="swipehint" hidden>Свайпніть, щоб побачити діаграму</p></section><button type="button" class="cashcard" aria-haspopup="dialog"><span class="atitle">Готівка з телефона <span aria-hidden="true">›</span></span><span class="achips"><span class="achip">1 запис · 1 зл</span></span></button><dialog class="sheet cashsheet" aria-label="Готівка з телефона, Жовтень 2026"><div class="sheetin"><div class="sheethead"><span class="handle" aria-hidden="true"></span><h2>Готівка з телефона<small>Жовтень 2026</small></h2><button type="button" class="sheetclose" aria-label="Закрити">×</button></div><ul class="cashlist"><li class="crow"><div class="cbody"><span class="cdate">23 жовтня</span><span class="cdesc">пиво<small>Продукти · Оля</small></span><span class="camt">1,00 зл</span></div></li></ul></div></dialog></div><div data-s="save" hidden>
 <section class="card"><h2>Скільки відкладено</h2>
 <div class="ring"><svg viewBox="0 0 140 140" aria-hidden="true"><g transform="rotate(-90 70 70)"><circle class="rtrack" r="63" cx="70" cy="70"/><circle class="rarc" r="63" cx="70" cy="70" stroke-dasharray="128.47 395.84"/></g></svg><div><b>32,5%</b><small>відкладено</small></div></div><div class="sub center">доходу відкладено (9 800 зл − 6 619 зл)</div>
 <div class="stack"><span class="seg a" style="flex:3180.60" title="Відкладено: 3 180,60 зл"></span><span class="seg b" style="flex:6619.40" title="Витрати: 6 619,40 зл"></span></div><div class="legend"><span class="key"><i class="sw a"></i>Відкладено <b>3 181 зл</b> · 32%</span><span class="key"><i class="sw b"></i>Витрати <b>6 619 зл</b> · 68%</span></div>
@@ -282,9 +305,7 @@ small { color:var(--text-muted); }
 <div class="slide"><div class="donut"><svg viewBox="0 0 160 160" aria-hidden="true"><g transform="rotate(-90 80 80)"><circle r="71" cx="80" cy="80" style="stroke:var(--cat-housing)" stroke-dasharray="282.82 446.11" stroke-dashoffset="-0.00"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-groceries)" stroke-dasharray="85.12 446.11" stroke-dashoffset="-284.82"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-transport)" stroke-dasharray="16.46 446.11" stroke-dashoffset="-371.95"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-gold)" stroke-dasharray="16.39 446.11" stroke-dashoffset="-390.40"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-subscriptions)" stroke-dasharray="11.66 446.11" stroke-dashoffset="-408.79"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-cafe)" stroke-dasharray="7.34 446.11" stroke-dashoffset="-422.45"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-delivery)" stroke-dasharray="5.67 446.11" stroke-dashoffset="-431.79"/><circle r="71" cx="80" cy="80" style="stroke:var(--cat-beauty)" stroke-dasharray="4.65 446.11" stroke-dashoffset="-439.46"/></g></svg><div><b>4 979<span class="cur">зл</span></b><small>витрачено</small></div></div><ul class="dlegend"><li><i class="sw" style="background:var(--cat-housing)"></i>Житло <b>64%</b></li><li><i class="sw" style="background:var(--cat-groceries)"></i>Продукти <b>20%</b></li><li><i class="sw" style="background:var(--cat-transport)"></i>Транспорт <b>4%</b></li><li><i class="sw" style="background:var(--cat-gold)"></i>Спорт <b>4%</b></li><li><i class="sw" style="background:var(--cat-subscriptions)"></i>Підписки <b>3%</b></li><li><i class="sw" style="background:var(--cat-cafe)"></i>Кафе <b>2%</b></li><li><i class="sw" style="background:var(--cat-delivery)"></i>Доставка їжі <b>2%</b></li><li><i class="sw" style="background:var(--cat-beauty)"></i>Краса і побут <b>1%</b></li></ul></div>
 </div>
 <div class="dots"><button type="button" aria-label="Список" aria-current="true"></button><button type="button" aria-label="Діаграма" aria-current="false"></button></div>
-<p class="swipehint" hidden>Свайпніть, щоб побачити діаграму</p></section>
-<section class="card"><h2>Готівка, додана з телефону</h2>
-<table class="cash"><tr><td>23 жовтня</td><td>Оля</td><td>пиво<br><small>Продукти</small></td><td>1,00 зл</td></tr></table></section></div><div data-s="save" hidden>
+<p class="swipehint" hidden>Свайпніть, щоб побачити діаграму</p></section><button type="button" class="cashcard" aria-haspopup="dialog"><span class="atitle">Готівка з телефона <span aria-hidden="true">›</span></span><span class="achips"><span class="achip">1 запис · 1 зл</span></span></button><dialog class="sheet cashsheet" aria-label="Готівка з телефона, Жовтень 2026"><div class="sheetin"><div class="sheethead"><span class="handle" aria-hidden="true"></span><h2>Готівка з телефона<small>Жовтень 2026</small></h2><button type="button" class="sheetclose" aria-label="Закрити">×</button></div><ul class="cashlist"><li class="crow"><div class="cbody"><span class="cdate">23 жовтня</span><span class="cdesc">пиво<small>Продукти</small></span><span class="camt">1,00 зл</span></div></li></ul></div></dialog></div><div data-s="save" hidden>
 <section class="card"><h2>Скільки відкладено</h2>
 <div class="ring"><svg viewBox="0 0 140 140" aria-hidden="true"><g transform="rotate(-90 70 70)"><circle class="rtrack" r="63" cx="70" cy="70"/><circle class="rarc" r="63" cx="70" cy="70" stroke-dasharray="194.73 395.84"/></g></svg><div><b>49,2%</b><small>відкладено</small></div></div><div class="sub center">доходу відкладено (9 800 зл − 4 979 зл)</div>
 <div class="stack"><span class="seg a" style="flex:4820.95" title="Відкладено: 4 820,95 зл"></span><span class="seg b" style="flex:4979.05" title="Витрати: 4 979,05 зл"></span></div><div class="legend"><span class="key"><i class="sw a"></i>Відкладено <b>4 821 зл</b> · 49%</span><span class="key"><i class="sw b"></i>Витрати <b>4 979 зл</b> · 51%</span></div>
@@ -352,6 +373,41 @@ st.forEach(t => t.addEventListener('click', () => { s = t.dataset.s; show(); scr
 document.addEventListener('click', e => document.querySelectorAll('details.menu[open]').forEach(x => x.contains(e.target) || x.removeAttribute('open')));
 mt.forEach(t => t.addEventListener('click', () => { m = t.dataset.m; show(); }));
 if (document.querySelector('.flash')) navigator.vibrate?.(10);  // відгук після збереження готівки
+// Шторки: відкрити, закрити (×, дотик по затемненню, Esc, свайп униз); поки відкрита — сторінка не прокручується.
+const lockPage = () => document.documentElement.classList.toggle('locked', !!document.querySelector('dialog[open]'));
+const openSheet = d => { d.showModal(); lockPage(); };
+document.querySelectorAll('dialog.sheet').forEach(d => {
+  d.addEventListener('close', () => { d.style.transform = ''; lockPage(); });
+  d.addEventListener('click', e => { if (e.target === d) d.close(); });
+  d.querySelector('.sheetclose')?.addEventListener('click', () => d.close());
+  const head = d.querySelector('.sheethead'); let y0 = null, dy = 0;
+  head.addEventListener('touchstart', e => { y0 = e.touches[0].clientY; dy = 0; }, { passive: true });
+  head.addEventListener('touchmove', e => { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); d.style.transform = `translateY(${dy}px)`; }, { passive: true });
+  head.addEventListener('touchend', () => { y0 = null; if (dy > 80) d.close(); else d.style.transform = ''; });
+});
+document.querySelectorAll('.cashcard').forEach(b => b.addEventListener('click', () => openSheet(b.nextElementSibling)));
+// Рядок: свайп уліво відкриває кнопки (відкритий лише один), дотик — шторка дій; дотик деінде закриває рядок.
+const crows = document.querySelectorAll('.crow[data-id]');
+const shutRows = keep => crows.forEach(r => { if (r !== keep && r.scrollLeft > 4) r.scrollLeft = 0; });  // миттєво: плавне закриття само закривало б інші рядки
+crows.forEach(r => r.addEventListener('scroll', () => { if (r.scrollLeft > 4) shutRows(r); }, { passive: true }));
+document.addEventListener('click', e => { if (!e.target.closest('.cacts')) shutRows(e.target.closest('.crow')); });
+const act = document.querySelector('.actsheet');
+function rowActions(row, confirm) {
+  act.dataset.id = row.dataset.id;
+  act.querySelector('[data-act=edit]').href = row.querySelector('.cedit').href;
+  act.querySelector('.actq').textContent = confirm ? `Видалити запис на ${row.dataset.amount}?` : `${row.dataset.desc} · ${row.dataset.amount}`;
+  act.querySelector('.acts-main').hidden = confirm;
+  act.querySelector('.acts-confirm').hidden = !confirm;
+  if (!act.open) openSheet(act);
+}
+crows.forEach(r => r.querySelector('.cbody').addEventListener('click', () => r.scrollLeft > 4 ? r.scrollTo({ left: 0, behavior: 'smooth' }) : rowActions(r, false)));
+document.querySelectorAll('.cdel').forEach(b => b.addEventListener('click', () => rowActions(b.closest('.crow'), true)));
+act?.addEventListener('click', e => {
+  const a = e.target.closest('[data-act]')?.dataset.act;
+  if (a === 'cancel') act.close();
+  if (a === 'ask') rowActions(document.querySelector(`.crow[data-id="${act.dataset.id}"]`), true);
+  if (a === 'delete') { const f = document.getElementById('delform'); f.edit.value = act.dataset.id; f.submit(); }
+});
 document.querySelectorAll('.alert').forEach(a => a.addEventListener('click', () => { s = 'limits'; show(); scrollTo(0, 0); }));
 const has = (list, key, v) => [...list].some(t => t.dataset[key] === v);
 try { const s = JSON.parse(localStorage.getItem('view') || '{}'); if (has(pt, 'p', s.p)) p = s.p; if (has(mt, 'm', s.m)) m = s.m; } catch (e) {}

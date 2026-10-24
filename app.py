@@ -179,7 +179,8 @@ def nav():
 <details class="menu"><summary aria-label="Меню: {me()}">{me()}</summary>
 <div class="menu-list"><a href="{url_for('add')}">+ Нова транзакція</a><a href="{url_for('limits')}">Ліміти</a>
 <form method="post" action="{url_for('logout')}"><input type="hidden" name="csrf" value="{csrf_token()}">
-<button type="submit">Вийти</button></form></div></details>"""
+<button type="submit">Вийти</button></form></div></details>
+<form id="delform" method="post" action="{url_for('delete')}" hidden><input type="hidden" name="csrf" value="{csrf_token()}"><input type="hidden" name="edit"></form>"""
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -227,8 +228,13 @@ def index():
     flash = ""
     if "added" in session:
         flash = escape(session.pop("added"))
-    return report.render(LEDGER, head=HEAD, nav=nav(), flash=flash, viewer=me(), settings_url=url_for("limits"), splash=True,
-                         edit_url=url_for("add") + "?edit=")
+    # Після видалення — кнопка «Скасувати» в повідомленні (6 с на екрані; сервер приймає її ще UNDO_SECONDS).
+    action = ""
+    if session.pop("undo_offer", False) and "undo" in session:
+        action = (f'<form method="post" action="{url_for("undo")}"><input type="hidden" name="csrf" value="{csrf_token()}">'
+                  f'<button type="submit" class="undo">Скасувати</button></form>')
+    return report.render(LEDGER, head=HEAD, nav=nav(), flash=flash, flash_action=action, viewer=me(),
+                         settings_url=url_for("limits"), splash=True, edit_url=url_for("add") + "?edit=")
 
 
 def own_entry(eid):
@@ -295,9 +301,6 @@ def add():
         for v, label in (("ні", "Особиста"), ("так", "Спільна"))
     )
     title = "Змінити транзакцію" if edit else "Нова транзакція"
-    remove = (f'<form method="post" action="{url_for("delete")}" class="delform"><input type="hidden" name="csrf" value="{csrf_token()}">'
-              f'<input type="hidden" name="edit" value="{escape(edit)}"><button class="btn ghost wide" type="submit" '
-              f'data-q="{escape("Видалити «" + form["description"] + "»?")}" onclick="return confirm(this.dataset.q)">Видалити транзакцію</button></form>') if edit else ""
     return page(title, f"""
 <header><h1>{title}</h1><nav class="nav"><a class="btn ghost" href="{url_for('index')}">До звіту</a></nav></header>
 <form method="post" class="pay">
@@ -311,8 +314,8 @@ def add():
 <input name="date" type="date" min="2026-08-01" max="{today + timedelta(days=1)}" value="{escape(form['date'])}" required aria-label="Дата"></fieldset>
 <div class="field"><span>Хто бачить</span><div class="radios">{shared}</div></div>
 </section>
-<div class="savebar"><button class="btn wide" type="submit">{"Зберегти зміни" if edit else "Зберегти"}</button></div>
-</form>{remove}
+<div class="savebar"><button class="btn wide" type="submit">Зберегти</button></div>
+</form>
 <script>
 // «Сьогодні» / «Вчора» ставлять дату самі; поле дати видно лише для «Інша дата». Без JS поле видно завжди.
 const f = document.querySelector('form.pay');
@@ -329,16 +332,41 @@ syncDate();
 
 @app.post("/delete")
 def delete():
-    """Видаляє свій запис готівки (після підтвердження в браузері)."""
+    """Видаляє свій запис готівки (після підтвердження у шторці) і запам'ятовує його для «Скасувати»."""
     check_csrf()
     old = own_entry(request.form.get("edit", ""))
     try:
         cashbook.remove(CASH, LEDGER, old["id"])
     except ValueError as e:
-        session["added"] = str(e)
+        session["added"] = f"Не вдалося видалити: {e}"
         return redirect(url_for("index"))
+    session["undo"] = {"block": old["block"], "at": time.time()}
+    session["undo_offer"] = True
     session["added"] = f"Видалено: {old['description']}, {report.zl(old['amount'])}."
     return redirect(f"{url_for('index')}?p={me()}&m={old['date'][:7]}")
+
+
+UNDO_SECONDS = 120
+
+
+@app.post("/undo")
+def undo():
+    """Повертає щойно видалений свій запис тим самим текстом."""
+    check_csrf()
+    saved = session.pop("undo", None)
+    if not saved or time.time() - saved["at"] > UNDO_SECONDS:
+        session["added"] = "Скасувати вже не вийде: минуло забагато часу."
+        return redirect(url_for("index"))
+    m = cashbook.ENTRY.fullmatch(saved["block"])
+    if not m or m.group(8) != me():
+        abort(404)
+    try:
+        cashbook.restore(CASH, LEDGER, saved["block"])
+    except ValueError as e:
+        session["added"] = f"Не вдалося повернути запис: {e}"
+        return redirect(url_for("index"))
+    session["added"] = f"Повернули запис: {m.group(2)}."
+    return redirect(f"{url_for('index')}?p={me()}&m={m.group(1)[:7]}")
 
 
 def money(text):
@@ -347,6 +375,8 @@ def money(text):
         value = Decimal(text.replace("\xa0", "").replace(" ", "").replace(",", ".")).quantize(Decimal("0.01"))
     except InvalidOperation:
         raise ValueError("Сума має бути числом, наприклад 12,50.") from None
+    if not value.is_finite():  # NaN проходить quantize і падав би лише на порівнянні
+        raise ValueError("Сума має бути числом, наприклад 12,50.")
     return value
 
 

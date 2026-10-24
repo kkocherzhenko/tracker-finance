@@ -143,6 +143,57 @@ class Privacy(unittest.TestCase):
         self.assertEqual(self.client.post("/delete", data={"csrf": token, "edit": e["id"]}).status_code, 404)
         self.assertEqual(cashbook.entries(app.CASH), [e])
 
+    def test_cannot_touch_other_persons_personal_cash(self):
+        e = self.add_cash(self.login("olia"), "Особиста кава")
+        self.client = app.app.test_client()
+        token = self.login("marko")
+        self.assertNotIn("Особиста кава", self.client.get("/").text)
+        self.assertEqual(self.client.get(f"/add?edit={e['id']}").status_code, 404)
+        self.assertEqual(self.client.post("/delete", data={"csrf": token, "edit": e["id"]}).status_code, 404)
+        self.assertEqual(cashbook.entries(app.CASH), [e])
+
+    def test_imported_and_hand_written_entries_cannot_be_deleted(self):
+        token = self.login("olia")
+        files = [self.dir / "transactions.beancount", self.dir / "cash.beancount"]
+        before = [f.read_text(encoding="utf-8") for f in files]
+        for eid in ("0123456789ab", "", "Секретний подарунок"):  # банк, порожній, запис без позначки форми
+            self.assertEqual(self.client.post("/delete", data={"csrf": token, "edit": eid}).status_code, 404)
+        self.assertEqual([f.read_text(encoding="utf-8") for f in files], before)
+        self.assertEqual(cashbook.entries(app.CASH), [])  # записи без added_by/phone_id не вважаються записами форми
+
+    def test_description_cannot_inject_directives(self):
+        token = self.login("olia")
+        evil = 'Кава"\n2026-09-01 open Assets:Hack PLN\n2026-09-02 * "x'
+        r = self.client.post("/add", data={"csrf": token, "amount": "5", "description": evil, "date": "2026-09-10",
+                                           "account": "Expenses:Оля:Кафе", "shared": "ні"})
+        self.assertEqual(r.status_code, 302)
+        entries, errors, _ = loader.load_file(str(self.dir / "main.beancount"))
+        self.assertEqual(errors, [])
+        self.assertFalse([x for x in entries if getattr(x, "account", "") == "Assets:Hack"])
+        [e] = cashbook.entries(app.CASH)
+        self.assertNotIn('"', e["description"]); self.assertNotIn("\n", e["description"])
+        with self.assertRaises(ValueError):  # і сам модуль не пише лапки чи переноси
+            cashbook.text({"date": "2026-09-10", "description": 'a"\nb', "shared": False, "user": "olia",
+                           "account": "Expenses:Оля:Кафе", "amount": Decimal("1"), "person": "Оля"})
+
+    def test_bad_amounts_are_rejected(self):
+        token = self.login("olia")
+        for amount in ("NaN", "nan", "inf", "Infinity", "-5", "0", "1e9", "сто"):
+            r = self.client.post("/add", data={"csrf": token, "amount": amount, "description": "x", "date": "2026-09-10",
+                                               "account": "Expenses:Оля:Кафе", "shared": "ні"})
+            self.assertEqual(r.status_code, 200, amount)
+            self.assertIn('class="error"', r.text, amount)
+        self.assertEqual(cashbook.entries(app.CASH), [])
+
+    def test_undo_restores_entry_exactly(self):
+        token = self.login("olia")
+        e = self.add_cash(token, "Булка", amount="4,20", shared="так")
+        self.client.post("/delete", data={"csrf": token, "edit": e["id"]})
+        self.assertEqual(cashbook.entries(app.CASH), [])
+        self.assertIn("Скасувати", self.client.get("/").text)
+        self.assertEqual(self.client.post("/undo", data={"csrf": token}).status_code, 302)
+        self.assertEqual(cashbook.entries(app.CASH), [e])
+
     def test_no_data_without_login_and_no_fava(self):
         for path in ("/", "/add", "/limits"):
             self.assertEqual(self.client.get(path).status_code, 302)

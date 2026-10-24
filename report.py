@@ -395,23 +395,51 @@ def block_limits(rows, view, viewer, settings_url, last=None):
     return f'<section class="card"><h2>Ліміти на місяць</h2>{"".join(items)}{link}</section>'
 
 
+TRASH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>'
+
+
+def records(n):
+    """1 запис, 2 записи, 5 записів."""
+    return "запис" if n % 10 == 1 and n % 100 != 11 else "записи" if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else "записів"
+
+
 def block_cash(d, key, view, viewer=None, edit_url="", ids=None):
-    """Готівка місяця; біля своїх записів — посилання «Змінити» (чужі змінювати не можна)."""
+    """Готівка місяця: компактна картка, дотик відкриває шторку зі списком. Свої записи можна змінити чи видалити."""
     rows = d["cash"][key, view]
     if not rows:
         return ""
-    def edit(r):
-        eid = (ids or {}).get((r["date"].isoformat(), r["narration"], r["number"], r["person"]))
-        return f'<br><a class="editlink" href="{edit_url}{eid}">Змінити</a>' if edit_url and eid and r["person"] == viewer else ""
-    items = "".join(
-        f"<tr><td>{r['date'].day} {MONTH_GEN[r['date'].month]}</td><td>{escape(r['person'])}</td>"
-        f"<td>{escape(r['narration'])}<br><small>{escape(category_name(r['category']))}</small>{edit(r)}</td>"
-        f"<td>{zl(r['number'])}</td></tr>"
-        for r in rows
-    )
-    return f"""
-<section class="card"><h2>Готівка, додана з телефону</h2>
-<table class="cash">{items}</table></section>"""
+    pool = {k: list(v) for k, v in (ids or {}).items()}  # однакові записи — різні id по черзі
+    month, items, own = f"{MONTH_NAMES[key[1]]} {key[0]}", [], False
+    for r in rows:
+        mine = edit_url and r["person"] == viewer
+        eid = (pool.get((r["date"].isoformat(), r["narration"], r["number"], r["person"])) or [None]).pop(0) if mine else None
+        who = f" · {escape(r['person'])}" if view == "Разом" else ""
+        body = (f'<span class="cdate">{r["date"].day} {MONTH_GEN[r["date"].month]}</span>'
+                f'<span class="cdesc">{escape(r["narration"])}<small>{escape(category_name(r["category"]))}{who}</small></span>'
+                f'<span class="camt">{zl(r["number"])}</span>')
+        if eid:
+            own = True
+            items.append(f'<li class="crow" data-id="{eid}" data-amount="{zl(r["number"])}" data-desc="{escape(r["narration"])}">'
+                         f'<button type="button" class="cbody">{body}</button><span class="cacts">'
+                         f'<a class="cedit" href="{edit_url}{eid}">Змінити</a><button type="button" class="cdel">{TRASH}Видалити</button></span></li>')
+        else:
+            items.append(f'<li class="crow"><div class="cbody">{body}</div></li>')
+    hint = '<p class="foot">Смахніть запис уліво або торкніться його, щоб змінити чи видалити.</p>' if own else ""
+    total = sum(r["number"] for r in rows)
+    return (f'<button type="button" class="cashcard" aria-haspopup="dialog"><span class="atitle">Готівка з телефона <span aria-hidden="true">›</span></span>'
+            f'<span class="achips"><span class="achip">{len(rows)} {records(len(rows))} · {zl(total, 0)}</span></span></button>'
+            f'<dialog class="sheet cashsheet" aria-label="Готівка з телефона, {month}"><div class="sheetin">'
+            f'<div class="sheethead"><span class="handle" aria-hidden="true"></span><h2>Готівка з телефона<small>{month}</small></h2>'
+            f'<button type="button" class="sheetclose" aria-label="Закрити">×</button></div>'
+            f'<ul class="cashlist">{"".join(items)}</ul>{hint}</div></dialog>')
+
+
+# Шторка дій із записом: «Змінити / Видалити / Скасувати», потім підтвердження видалення.
+ACTIONS = f"""<dialog class="sheet actsheet" aria-label="Дії із записом"><div class="sheetin">
+<div class="sheethead"><span class="handle" aria-hidden="true"></span><p class="actq"></p></div>
+<div class="acts-main"><a class="btn wide" data-act="edit" href="#">Змінити</a><button type="button" class="btn wide danger" data-act="ask">{TRASH}Видалити</button></div>
+<div class="acts-confirm" hidden><button type="button" class="btn wide danger" data-act="delete">{TRASH}Видалити</button></div>
+<button type="button" class="btn ghost wide" data-act="cancel">Скасувати</button></div></dialog>"""
 
 
 CSS = """
@@ -554,7 +582,32 @@ td:last-child, th:last-child { text-align:right; white-space:nowrap; }
 small { color:var(--text-muted); }
 .month[hidden] { display:none; }
 .foot { color:var(--text-muted); font-size:.85rem; }
-.editlink { display:inline-flex; align-items:center; min-height:44px; font-size:.9rem; }
+/* Готівка: картка → шторка зі списком; рядок смахується вліво (scroll-snap) і показує «Змінити» / «Видалити» */
+html.locked { overflow:hidden; }
+.cashcard { display:block; width:100%; margin:16px 0; padding:12px 16px; border:1px solid var(--border); border-radius:24px; background:var(--surface); color:var(--text); font:inherit; text-align:left; cursor:pointer; }
+.sheet { position:fixed; inset:auto 0 0; width:100%; max-width:720px; max-height:85vh; margin:0 auto; padding:0; border:0; border-radius:24px 24px 0 0; background:var(--surface); color:var(--text); overflow:auto; overscroll-behavior:contain; animation:sheet-in .25s ease-out; }
+.sheet::backdrop { background:color-mix(in srgb, var(--text) 45%, transparent); }
+@keyframes sheet-in { from { transform:translateY(100%); } }
+.sheetin { padding:8px 20px calc(20px + env(safe-area-inset-bottom, 0px)); }
+.sheethead { position:relative; display:flex; align-items:center; gap:8px; padding:18px 0 8px; touch-action:none; }
+.handle { position:absolute; top:4px; left:50%; width:40px; height:5px; margin-left:-20px; border-radius:3px; background:var(--border); }
+.sheethead h2 { flex:1; margin:0; color:var(--text); font-size:1.1rem; letter-spacing:0; text-transform:none; } .sheethead h2 small { display:block; color:var(--text-muted); font-size:.85rem; font-weight:400; }
+.sheetclose { width:44px; height:44px; flex:none; border:0; border-radius:50%; background:var(--border); color:var(--text); font-size:1.5rem; line-height:1; cursor:pointer; }
+.cashlist { list-style:none; margin:0; padding:0; }
+.crow { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none; border-bottom:1px solid var(--border); }
+.crow::-webkit-scrollbar { display:none; } .crow:last-child { border-bottom:0; }
+.cbody { flex:0 0 100%; scroll-snap-align:start; display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; gap:12px; min-height:56px; padding:12px 0; border:0; background:none; color:var(--text); font:inherit; text-align:left; }
+button.cbody { cursor:pointer; }
+.cdate { color:var(--text-muted); font-size:.85rem; white-space:nowrap; } .cdesc small { display:block; } .camt { font-weight:600; white-space:nowrap; }
+.cacts { flex:none; display:flex; scroll-snap-align:end; }
+.cacts a, .cacts button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; width:84px; border:0; color:var(--on-accent); font:inherit; font-size:.85rem; font-weight:600; text-decoration:none; cursor:pointer; }
+.cedit { background:var(--accent-strong); } .cdel, .btn.danger { background:var(--negative); color:var(--on-accent); }
+.cacts svg, .btn.danger svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.btn.danger { gap:8px; }
+.actsheet .sheetin, .acts-main, .acts-confirm { display:flex; flex-direction:column; gap:8px; } .acts-main[hidden], .acts-confirm[hidden] { display:none; }
+.actq { margin:0; font-weight:600; }
+.flash.undo { animation-duration:6s; } .flash form { margin:0; }
+.undo { min-height:44px; padding:0 8px; border:0; background:none; color:var(--on-accent); font:inherit; font-weight:600; text-decoration:underline; cursor:pointer; }
 """
 
 
@@ -607,12 +660,13 @@ SECTIONS = [
 ]
 
 
-def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None, settings_url="", splash=False, edit_url=""):
+def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None, settings_url="", splash=False, edit_url="", flash_action=""):
     """Повна HTML-сторінка звіту. head/nav/flash/viewer/settings_url — додатки від веб-застосунку."""
     d = load(ledger, viewer)
     limit_table = load_limits(limits)
-    ids = {(e["date"], e["description"], e["amount"], e["person"]): e["id"]
-           for e in cashbook.entries(Path(ledger).parent / "cash.beancount")} if edit_url else {}
+    ids = defaultdict(list)
+    for e in cashbook.entries(Path(ledger).parent / "cash.beancount") if edit_url else []:
+        ids[e["date"], e["description"], e["amount"], e["person"]].append(e["id"])
     other = next(p for p in PEOPLE if p != viewer) if viewer else None
     keys = d["keys"]
     default = next((k for k in reversed(keys) if "закінчено" in month_caption(d, k)), keys[-1])
@@ -637,7 +691,7 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
                 f'<div data-s="fixed" hidden>{block_fixed(d, k, v)}</div>'
                 f'<div data-s="limits" hidden>{block_limits(rows, v, viewer, settings_url, d["last_day"][k] if partial else None)}</div></div>'
             )
-    flash_html = f'<p class="flash" role="status">{flash}</p>' if flash else ""
+    flash_html = f'<div class="flash{" undo" if flash_action else ""}" role="status"><span>{flash}</span>{flash_action}</div>' if flash else ""
     return f"""<!doctype html>
 <html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -648,7 +702,7 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
 <div class="sticky"><div class="tabs" role="tablist" id="people">{view_tabs}</div>
 <div class="tabs" role="tablist" id="months">{''.join(month_tabs)}</div></div>
 {''.join(panels)}
-</main>
+</main>{ACTIONS if edit_url else ""}
 <nav class="tabbar" role="tablist" id="sections">{"".join(
     f'<button role="tab" data-s="{k}" aria-selected="{str(k == "spend").lower()}"><svg viewBox="0 0 24 24" aria-hidden="true">{icon}</svg>{label}</button>'
     for k, label, icon in SECTIONS)}</nav>
@@ -696,6 +750,41 @@ st.forEach(t => t.addEventListener('click', () => {{ s = t.dataset.s; show(); sc
 document.addEventListener('click', e => document.querySelectorAll('details.menu[open]').forEach(x => x.contains(e.target) || x.removeAttribute('open')));
 mt.forEach(t => t.addEventListener('click', () => {{ m = t.dataset.m; show(); }}));
 if (document.querySelector('.flash')) navigator.vibrate?.(10);  // відгук після збереження готівки
+// Шторки: відкрити, закрити (×, дотик по затемненню, Esc, свайп униз); поки відкрита — сторінка не прокручується.
+const lockPage = () => document.documentElement.classList.toggle('locked', !!document.querySelector('dialog[open]'));
+const openSheet = d => {{ d.showModal(); lockPage(); }};
+document.querySelectorAll('dialog.sheet').forEach(d => {{
+  d.addEventListener('close', () => {{ d.style.transform = ''; lockPage(); }});
+  d.addEventListener('click', e => {{ if (e.target === d) d.close(); }});
+  d.querySelector('.sheetclose')?.addEventListener('click', () => d.close());
+  const head = d.querySelector('.sheethead'); let y0 = null, dy = 0;
+  head.addEventListener('touchstart', e => {{ y0 = e.touches[0].clientY; dy = 0; }}, {{ passive: true }});
+  head.addEventListener('touchmove', e => {{ if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); d.style.transform = `translateY(${{dy}}px)`; }}, {{ passive: true }});
+  head.addEventListener('touchend', () => {{ y0 = null; if (dy > 80) d.close(); else d.style.transform = ''; }});
+}});
+document.querySelectorAll('.cashcard').forEach(b => b.addEventListener('click', () => openSheet(b.nextElementSibling)));
+// Рядок: свайп уліво відкриває кнопки (відкритий лише один), дотик — шторка дій; дотик деінде закриває рядок.
+const crows = document.querySelectorAll('.crow[data-id]');
+const shutRows = keep => crows.forEach(r => {{ if (r !== keep && r.scrollLeft > 4) r.scrollLeft = 0; }});  // миттєво: плавне закриття само закривало б інші рядки
+crows.forEach(r => r.addEventListener('scroll', () => {{ if (r.scrollLeft > 4) shutRows(r); }}, {{ passive: true }}));
+document.addEventListener('click', e => {{ if (!e.target.closest('.cacts')) shutRows(e.target.closest('.crow')); }});
+const act = document.querySelector('.actsheet');
+function rowActions(row, confirm) {{
+  act.dataset.id = row.dataset.id;
+  act.querySelector('[data-act=edit]').href = row.querySelector('.cedit').href;
+  act.querySelector('.actq').textContent = confirm ? `Видалити запис на ${{row.dataset.amount}}?` : `${{row.dataset.desc}} · ${{row.dataset.amount}}`;
+  act.querySelector('.acts-main').hidden = confirm;
+  act.querySelector('.acts-confirm').hidden = !confirm;
+  if (!act.open) openSheet(act);
+}}
+crows.forEach(r => r.querySelector('.cbody').addEventListener('click', () => r.scrollLeft > 4 ? r.scrollTo({{ left: 0, behavior: 'smooth' }}) : rowActions(r, false)));
+document.querySelectorAll('.cdel').forEach(b => b.addEventListener('click', () => rowActions(b.closest('.crow'), true)));
+act?.addEventListener('click', e => {{
+  const a = e.target.closest('[data-act]')?.dataset.act;
+  if (a === 'cancel') act.close();
+  if (a === 'ask') rowActions(document.querySelector(`.crow[data-id="${{act.dataset.id}}"]`), true);
+  if (a === 'delete') {{ const f = document.getElementById('delform'); f.edit.value = act.dataset.id; f.submit(); }}
+}});
 document.querySelectorAll('.alert').forEach(a => a.addEventListener('click', () => {{ s = 'limits'; show(); scrollTo(0, 0); }}));
 const has = (list, key, v) => [...list].some(t => t.dataset[key] === v);
 try {{ const s = JSON.parse(localStorage.getItem('view') || '{{}}'); if (has(pt, 'p', s.p)) p = s.p; if (has(mt, 'm', s.m)) m = s.m; }} catch (e) {{}}
