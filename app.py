@@ -163,7 +163,7 @@ main:has(.login) {{ padding-bottom:24px; }}
 .login {{ min-height:calc(100dvh - 24px); max-width:420px; margin:0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; }}
 .login h1 {{ flex:none; display:flex; justify-content:center; margin:0 0 16px; }}
 .login .brand {{ gap:12px; }} .login .brand svg {{ width:44px; height:44px; }} .login .brand-name {{ font-size:2rem; }} .login .card {{ width:100%; }}
-</style></head><body><main>{body}</main></body></html>"""
+</style></head><body><main>{body}</main><script>{report.TOAST_JS}</script></body></html>"""
 
 
 def error_html(error):
@@ -225,16 +225,20 @@ def logout():
 
 @app.get("/")
 def index():
-    flash = ""
-    if "added" in session:
-        flash = escape(session.pop("added"))
     # Після видалення — кнопка «Скасувати» в повідомленні (6 с на екрані; сервер приймає її ще UNDO_SECONDS).
     action = ""
     if session.pop("undo_offer", False) and "undo" in session:
         action = (f'<form method="post" action="{url_for("undo")}"><input type="hidden" name="csrf" value="{csrf_token()}">'
-                  f'<button type="submit" class="undo">Скасувати</button></form>')
-    return report.render(LEDGER, head=HEAD, nav=nav(), flash=flash, flash_action=action, viewer=me(),
+                  f'<button type="submit" class="toast-act">Скасувати</button></form>')
+    return report.render(LEDGER, head=HEAD, nav=nav(), toast=toast_from_session(action), viewer=me(),
                          settings_url=url_for("limits"), splash=True, edit_url=url_for("add") + "?edit=")
+
+
+def toast_from_session(action="", low=False):
+    """Одне повідомлення з сесії (останнє замінює попереднє); помилки — з червоною іконкою."""
+    error = session.pop("toast_error", False)
+    message = session.pop("added", "")
+    return report.toast_html(escape(message), action, error, low) if message else ""
 
 
 def own_entry(eid):
@@ -283,7 +287,7 @@ def add():
                 error = str(e)
             else:
                 kind = "спільна" if entry["shared"] else "особиста"
-                session["added"] = f"{'Змінено' if edit else 'Додано'}: {entry['description']}, {report.zl(entry['amount'])} ({kind})."
+                session["added"] = f"{'Змінено' if edit else 'Додано'}: {entry['description']} · {report.zl(entry['amount'])}, {kind}."
                 return redirect(f"{url_for('index')}?p={entry['person']}&m={entry['date']:%Y-%m}")
     cats = "".join(
         f'<label class="cat"><input type="radio" name="account" value="{a}" required{" checked" if a == form["account"] else ""}>'
@@ -338,11 +342,11 @@ def delete():
     try:
         cashbook.remove(CASH, LEDGER, old["id"])
     except ValueError as e:
-        session["added"] = f"Не вдалося видалити: {e}"
+        session["added"], session["toast_error"] = f"Не вдалося видалити: {e}", True
         return redirect(url_for("index"))
     session["undo"] = {"block": old["block"], "at": time.time()}
     session["undo_offer"] = True
-    session["added"] = f"Видалено: {old['description']}, {report.zl(old['amount'])}."
+    session["added"] = f"Видалено: {old['description']} · {report.zl(old['amount'])}"
     return redirect(f"{url_for('index')}?p={me()}&m={old['date'][:7]}")
 
 
@@ -355,7 +359,7 @@ def undo():
     check_csrf()
     saved = session.pop("undo", None)
     if not saved or time.time() - saved["at"] > UNDO_SECONDS:
-        session["added"] = "Скасувати вже не вийде: минуло забагато часу."
+        session["added"], session["toast_error"] = "Скасувати вже не вийде: минуло забагато часу.", True
         return redirect(url_for("index"))
     m = cashbook.ENTRY.fullmatch(saved["block"])
     if not m or m.group(8) != me():
@@ -363,7 +367,7 @@ def undo():
     try:
         cashbook.restore(CASH, LEDGER, saved["block"])
     except ValueError as e:
-        session["added"] = f"Не вдалося повернути запис: {e}"
+        session["added"], session["toast_error"] = f"Не вдалося повернути запис: {e}", True
         return redirect(url_for("index"))
     session["added"] = f"Повернули запис: {m.group(2)}."
     return redirect(f"{url_for('index')}?p={me()}&m={m.group(1)[:7]}")
@@ -435,7 +439,7 @@ def limits():
         chosen = accounts[0]
     if request.method == "GET":
         amount = f"{mine[chosen]:f}".replace(".", ",") if chosen in mine else ""
-    flash = escape(session.pop("added", ""))
+    toast = toast_from_session(low=True)
     options = "".join(
         f'<option value="{a}"{" selected" if a == chosen else ""}>{name(a)}{f" — {report.zl(mine[a], 0)}" if a in mine else ""}</option>'
         for a in accounts
@@ -447,7 +451,7 @@ def limits():
     remove = '<button class="btn ghost wide" type="submit" name="remove" value="1" formnovalidate>Прибрати ліміт</button>' if chosen in mine else ""
     return page("Ліміти", f"""
 <header><h1>Ліміти</h1><nav class="nav"><a class="btn ghost" href="{url_for('index')}">До звіту</a></nav></header>
-{f'<p class="flash" role="status">{flash}</p>' if flash else ''}
+{toast}
 <section class="card"><h2>Задати ліміт</h2><form method="post">
 <input type="hidden" name="csrf" value="{csrf_token()}">
 {error_html(error)}

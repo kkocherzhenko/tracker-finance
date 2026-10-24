@@ -451,6 +451,7 @@ CSS = """
   --positive:#2f7a59; --negative:#c2534b; --warning:#946a1e;
   --warning-soft:color-mix(in srgb, var(--warning) 12%, var(--surface)); --negative-soft:color-mix(in srgb, var(--negative) 12%, var(--surface));
   /* Кольори категорій (донат, легенда, точки й смуги списку). Контраст до білої картки ≥ 3:1; не плутаються з червоним/жовтим/зеленим лімітів. */
+  --toast-action:#a9c1da; --toast-error:#e8a49e; /* на темно-синьому: 6,9:1 і світло-червона іконка помилки */
   --cat-housing:#1f3350; --cat-groceries:#3fa369; --cat-delivery:#e47635; --cat-cafe:#843625; --cat-transport:#6c8ebf; --cat-subscriptions:#8a6fbf;
   --cat-beauty:#d5769d; --cat-mobile:#40a0b0; --cat-gold:#9c8320; --cat-olive:#7a8b3d; --cat-taupe:#8c7a6b; --cat-grey:#8996a4; --cat-plum:#642645;
   --cat1:#1e3550; --cat2:#739bbf; --cat3:#a9c1da; --cat4:#4a6f94; --cat5:#d0dced; --cat6:#2b4c70; --cat7:#8fb0cf; --cat8:#53677d;
@@ -493,8 +494,6 @@ header h1 { display:flex; align-items:center; } /* без запасу під б
 #months { justify-content:center; gap:4px; margin-top:4px; }
 #months button { min-height:44px; padding:0 12px; font:inherit; font-size:.95rem; font-weight:500; color:var(--text-muted); background:none; border:0; border-bottom:2px solid transparent; cursor:pointer; }
 #months button[aria-selected="true"] { color:var(--text); font-weight:600; border-bottom-color:var(--accent); }
-.flash { position:fixed; z-index:2; left:24px; right:24px; bottom:calc(96px + env(safe-area-inset-bottom, 0px)); max-width:672px; margin:0 auto; background:var(--accent-strong); color:var(--on-accent); border-radius:999px; padding:14px 20px; animation:toast 5s forwards; }
-@keyframes toast { 0%, 85% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
 .alert { background:var(--surface); border:1px solid color-mix(in srgb, var(--warning) 40%, var(--surface)); border-radius:24px; padding:12px 16px; margin:16px 0 0; cursor:pointer; }
 .atitle { display:block; width:100%; min-height:32px; padding:0; border:0; background:none; font:inherit; font-weight:600; color:var(--text); text-align:left; cursor:pointer; }
 .achips { display:flex; gap:8px; margin-top:6px; overflow-x:auto; white-space:nowrap; scrollbar-width:none; } .achips::-webkit-scrollbar { display:none; }
@@ -571,7 +570,7 @@ h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600
 .dots button { display:grid; place-items:center; width:44px; height:44px; padding:0; border:0; background:none; cursor:pointer; }
 .dots button::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--border); } .dots button[aria-current="true"]::before { background:var(--accent-strong); }
 .swipehint { margin:0; text-align:center; color:var(--text-muted); font-size:.85rem; }
-@media (prefers-reduced-motion: reduce) { *:not(.flash) { animation:none !important; transition:none !important; } }
+@media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
 .over small { color:var(--negative); font-weight:600; }
 .verdict { margin:16px 0 0; }
 a { color:var(--accent-strong); }
@@ -606,8 +605,18 @@ button.cbody { cursor:pointer; }
 .btn.danger { gap:8px; }
 .actsheet .sheetin, .acts-main, .acts-confirm { display:flex; flex-direction:column; gap:8px; } .acts-main[hidden], .acts-confirm[hidden] { display:none; }
 .actq { margin:0; font-weight:600; }
-.flash.undo { animation-duration:6s; } .flash form { margin:0; }
-.undo { min-height:44px; padding:0 8px; border:0; background:none; color:var(--on-accent); font:inherit; font-weight:600; text-decoration:underline; cursor:pointer; }
+/* Повідомлення (toast): темно-синє, внизу над «+» і нижнім меню, 6 с зі смужкою часу. Текст білий 12,5:1, дія — крижана 6,9:1. */
+.toast { position:fixed; z-index:20; left:50%; bottom:calc(156px + env(safe-area-inset-bottom, 0px)); width:calc(100% - 32px); max-width:480px; display:flex; align-items:center; gap:12px; margin:0; padding:12px 16px; overflow:hidden; border-radius:14px; background:var(--text); color:var(--on-accent); font-size:15px; line-height:1.35; box-shadow:0 8px 24px color-mix(in srgb, var(--text) 30%, transparent); transform:translateX(-50%); animation:toast-in .2s ease-out; }
+.toast.low { bottom:calc(16px + env(safe-area-inset-bottom, 0px)); } /* сторінки без нижнього меню й «+» */
+.toast.out { opacity:0; transition:opacity .2s; }
+.tmsg { flex:1; min-width:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.tico { flex:none; width:22px; height:22px; fill:none; stroke:var(--toast-error); stroke-width:2; stroke-linecap:round; }
+.toast form { flex:none; margin:0; }
+.toast-act { min-width:44px; min-height:44px; padding:0 8px; border:0; background:none; color:var(--toast-action); font:inherit; font-weight:700; text-decoration:none; cursor:pointer; }
+.tbar { position:absolute; left:0; bottom:0; width:100%; height:3px; background:var(--toast-action); transform-origin:left; animation:toast-bar 6s linear forwards; }
+.toast.held .tbar { animation-play-state:paused; }
+@keyframes toast-in { from { opacity:0; transform:translate(-50%, 12px); } }
+@keyframes toast-bar { to { transform:scaleX(0); } }
 """
 
 
@@ -651,6 +660,36 @@ BRAND = """<a class="brand" href="/" aria-label="Trajet"><svg viewBox="0 0 32 32
 <path d="M13.25 7V1.4H14.75V7ZM14.6 1.4L19 3.1L14.6 4.8Z" fill="#1E3550"/></svg><span class="brand-name">Trajet</span></a>"""
 
 
+def toast_html(message, action="", error=False, low=False):
+    """Повідомлення внизу. message уже екранований; action — кнопка (напр. «Скасувати»); помилка — з червоною іконкою."""
+    icon = ('<svg class="tico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/>'
+            '<path d="M12 7.5v5.5M12 16.5h.01"/></svg>') if error else ""
+    return (f'<div class="toast{" err" if error else ""}{" low" if low else ""}" role="status" aria-live="polite">'
+            f'{icon}<span class="tmsg">{message}</span>{action}<i class="tbar" aria-hidden="true"></i></div>')
+
+
+# Повідомлення: 6 с; пауза, поки палець на ньому; свайп униз прибирає. Відкрита шторка забирає його до себе, щоб воно було зверху.
+TOAST_JS = """(() => {
+  const t = document.querySelector('.toast');
+  if (!t) return;
+  let left = 6000, start = Date.now(), timer, y0 = null;
+  const hide = () => { clearTimeout(timer); t.classList.add('out'); setTimeout(() => t.remove(), 200); };
+  const hold = () => { clearTimeout(timer); left -= Date.now() - start; t.classList.add('held'); };
+  const run = () => { start = Date.now(); t.classList.remove('held'); timer = setTimeout(hide, Math.max(left, 800)); };
+  t.addEventListener('touchstart', e => { y0 = e.touches[0].clientY; hold(); }, { passive: true });
+  t.addEventListener('touchend', e => { const dy = e.changedTouches[0].clientY - (y0 ?? 0); y0 = null; dy > 30 ? hide() : run(); });
+  t.addEventListener('mouseenter', hold);
+  t.addEventListener('mouseleave', run);
+  window.toastTo = box => {
+    if (!t.isConnected) return;
+    const gone = 6000 - (t.classList.contains('held') ? left : left - (Date.now() - start));
+    box.append(t);  // переміщення перезапускає CSS-анімацію смужки — продовжуємо з того самого місця
+    t.querySelector('.tbar').style.animationDelay = -gone + 'ms';
+  };
+  run();
+})();"""
+
+
 # Нижнє меню звіту: (ключ, підпис, іконка SVG).
 SECTIONS = [
     ("spend", "Витрати", '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>'),
@@ -660,8 +699,8 @@ SECTIONS = [
 ]
 
 
-def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None, settings_url="", splash=False, edit_url="", flash_action=""):
-    """Повна HTML-сторінка звіту. head/nav/flash/viewer/settings_url — додатки від веб-застосунку."""
+def render(ledger=LEDGER, *, head="", nav="", viewer=None, limits=None, settings_url="", splash=False, edit_url="", toast=""):
+    """Повна HTML-сторінка звіту. head/nav/toast/viewer/settings_url — додатки від веб-застосунку."""
     d = load(ledger, viewer)
     limit_table = load_limits(limits)
     ids = defaultdict(list)
@@ -691,14 +730,13 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
                 f'<div data-s="fixed" hidden>{block_fixed(d, k, v)}</div>'
                 f'<div data-s="limits" hidden>{block_limits(rows, v, viewer, settings_url, d["last_day"][k] if partial else None)}</div></div>'
             )
-    flash_html = f'<div class="flash{" undo" if flash_action else ""}" role="status"><span>{flash}</span>{flash_action}</div>' if flash else ""
     return f"""<!doctype html>
 <html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Trajet</title>{head}
 <style>{CSS}</style></head><body>{SPLASH if splash else ""}<main>
 <header><h1>{BRAND}</h1>{nav}</header>
-{flash_html}
+{toast}
 <div class="sticky"><div class="tabs" role="tablist" id="people">{view_tabs}</div>
 <div class="tabs" role="tablist" id="months">{''.join(month_tabs)}</div></div>
 {''.join(panels)}
@@ -749,12 +787,13 @@ st.forEach(t => t.addEventListener('click', () => {{ s = t.dataset.s; show(); sc
 // Меню в шапці закривається дотиком будь-де поза ним.
 document.addEventListener('click', e => document.querySelectorAll('details.menu[open]').forEach(x => x.contains(e.target) || x.removeAttribute('open')));
 mt.forEach(t => t.addEventListener('click', () => {{ m = t.dataset.m; show(); }}));
-if (document.querySelector('.flash')) navigator.vibrate?.(10);  // відгук після збереження готівки
+{TOAST_JS}
+if (document.querySelector('.toast:not(.err)')) navigator.vibrate?.(10);  // відгук після збереження
 // Шторки: відкрити, закрити (×, дотик по затемненню, Esc, свайп униз); поки відкрита — сторінка не прокручується.
 const lockPage = () => document.documentElement.classList.toggle('locked', !!document.querySelector('dialog[open]'));
-const openSheet = d => {{ d.showModal(); lockPage(); }};
+const openSheet = d => {{ d.showModal(); lockPage(); window.toastTo?.(d); }};
 document.querySelectorAll('dialog.sheet').forEach(d => {{
-  d.addEventListener('close', () => {{ d.style.transform = ''; lockPage(); }});
+  d.addEventListener('close', () => {{ d.style.transform = ''; lockPage(); const t = d.querySelector('.toast'); if (t) window.toastTo(document.querySelector('dialog[open]') || document.body); }});
   d.addEventListener('click', e => {{ if (e.target === d) d.close(); }});
   d.querySelector('.sheetclose')?.addEventListener('click', () => d.close());
   const head = d.querySelector('.sheethead'); let y0 = null, dy = 0;
