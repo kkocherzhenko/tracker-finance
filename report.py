@@ -129,7 +129,18 @@ def month_caption(d, key):
     return "місяць закінчено"
 
 
-def block_categories(d, key, view):
+def delta_chip(d, key, view, total, partial):
+    """«▲ 12% до серпня»: витрати проти попереднього місяця. Для першого і неповного місяця — нічого."""
+    i = d["keys"].index(key)
+    prev = sum(d["categories"].get((d["keys"][i - 1], view), {}).values()) if i else 0
+    if partial or prev <= 0:
+        return ""
+    up = total > prev
+    return (f'<span class="chip {"bad" if up else "good"}">{"▲" if up else "▼"} '
+            f'{pct(abs(total - prev), prev)} до {MONTH_GEN[d["keys"][i - 1][1]]}</span>')
+
+
+def block_categories(d, key, view, partial):
     rows = sorted(d["categories"][key, view].items(), key=lambda kv: -kv[1])
     if not rows:
         return '<section class="card"><h2>Куди йдуть гроші</h2><p class="verdict">Витрат за цей місяць немає.</p></section>'
@@ -148,7 +159,7 @@ def block_categories(d, key, view):
     verdict = f"Найбільша стаття — {rows[0][0].lower()}: {pct(rows[0][1], total)} усіх витрат."
     return f"""
 <section class="card"><h2>Куди йдуть гроші</h2>
-<div class="hero">{zl_html(total)}</div><div class="sub">витрачено за місяць</div>
+<div class="hero">{zl_html(total)}</div><div class="sub">витрачено за місяць {delta_chip(d, key, view, total, partial)}</div>
 <div class="chart">{bars}</div>
 <p class="verdict">{verdict}</p>
 <details><summary>Показати таблицею</summary>
@@ -308,6 +319,8 @@ h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em
 .card { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:24px; margin:16px 0; }
 h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
 .cur { font-size:.5em; font-weight:500; color:var(--text-muted); margin-left:.15em; letter-spacing:0; }
+.chip { display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding:3px 10px; border-radius:999px; font-size:.8rem; font-weight:600; color:var(--text); white-space:nowrap; }
+.chip.bad { background:var(--negative-soft); } .chip.good { background:color-mix(in srgb, var(--positive) 14%, var(--surface)); }
 .hero { font-size:3.5rem; line-height:1.1; font-weight:600; letter-spacing:-.03em; } .sub { color:var(--text-muted); margin:4px 0 20px; }
 .row { display:grid; grid-template-columns:minmax(90px, 132px) 1fr 76px; align-items:center; gap:10px; margin:8px 0; }
 .name { color:var(--text-muted); font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .val { text-align:right; font-size:.9rem; font-weight:500; white-space:nowrap; }
@@ -371,7 +384,7 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
             panels.append(
                 f'<div class="month" data-m="{month_id(k)}" data-p="{v}" hidden>{limits_banner(rows)}'
                 f'<p class="caption{" partial" if partial else ""}">{v} · {MONTH_NAMES[k[1]]} {k[0]} · {cap}{note}</p>'
-                f'<div data-s="spend">{block_categories(d, k, v)}{block_cash(d, k, v)}</div>'
+                f'<div data-s="spend">{block_categories(d, k, v, partial)}{block_cash(d, k, v)}</div>'
                 f'<div data-s="save" hidden>{block_savings(d, k, v, partial, v == other)}</div>'
                 f'<div data-s="fixed" hidden>{block_fixed(d, k, v)}</div>'
                 f'<div data-s="limits" hidden>{block_limits(rows, v, viewer, settings_url)}</div></div>'
