@@ -211,6 +211,15 @@ def donut(rows, total):
             f'<div><b>{zl_html(total)}</b><small>витрачено</small></div></div>')
 
 
+def ring(percent, label, negative=False):
+    """Кільце 140 px: дуга = percent (0–100, за модулем), у центрі label і «відкладено»."""
+    r, c = 63, 2 * math.pi * 63
+    arc = min(abs(float(percent)), 100) / 100 * c
+    return (f'<div class="ring{" neg" if negative else ""}"><svg viewBox="0 0 140 140" aria-hidden="true"><g transform="rotate(-90 70 70)">'
+            f'<circle class="rtrack" r="{r}" cx="70" cy="70"/><circle class="rarc" r="{r}" cx="70" cy="70" stroke-dasharray="{arc:.2f} {c:.2f}"/>'
+            f'</g></svg><div><b>{label}</b><small>відкладено</small></div></div>')
+
+
 def stacked(parts):
     """parts: [(підпис, значення, css-клас)] -> горизонтальна смуга + легенда."""
     total = sum(v for _, v, _ in parts)
@@ -240,7 +249,7 @@ def block_savings(d, key, view, partial, private=False):
     bar = stacked([("Відкладено", saved, "a"), ("Витрати", spent, "b")]) if saved > 0 else ""
     return f"""
 <section class="card"><h2>Скільки відкладено</h2>
-<div class="hero">{rate}</div><div class="sub">доходу відкладено ({zl(income, 0)} − {zl(spent, 0)})</div>
+{ring(saved / income * 100, rate, saved < 0)}<div class="sub center">доходу відкладено ({zl(income, 0)} − {zl(spent, 0)})</div>
 {bar}
 <p class="verdict">Відкладено {zl(saved, 0)} із {zl(income, 0)}.{warn}</p></section>"""
 
@@ -396,6 +405,13 @@ h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em
 .card { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:24px; margin:16px 0; }
 h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
 .cur { font-size:.5em; font-weight:500; color:var(--text-muted); margin-left:.15em; letter-spacing:0; }
+.ring { position:relative; width:140px; height:140px; margin:4px auto 8px; }
+.ring svg { width:100%; height:100%; } .ring circle { fill:none; stroke-width:14; } .rtrack { stroke:var(--border); }
+.rarc { stroke:var(--accent); stroke-linecap:round; animation:draw .4s ease-out; } .ring.neg .rarc { stroke:var(--negative); }
+@keyframes draw { from { stroke-dasharray:0 999; } }
+.ring div { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.ring b { font-size:2rem; font-weight:600; letter-spacing:-.02em; line-height:1.1; } .ring small { font-size:.8rem; }
+.sub.center { text-align:center; }
 .chip { display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding:3px 10px; border-radius:999px; font-size:.8rem; font-weight:600; color:var(--text); white-space:nowrap; }
 .chip.bad { background:var(--negative-soft); } .chip.good { background:color-mix(in srgb, var(--positive) 14%, var(--surface)); }
 .hero { font-size:3.5rem; line-height:1.1; font-weight:600; letter-spacing:-.03em; } .sub { color:var(--text-muted); margin:4px 0 20px; }

@@ -50,6 +50,13 @@ h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em
 .card { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:24px; margin:16px 0; }
 h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
 .cur { font-size:.5em; font-weight:500; color:var(--text-muted); margin-left:.15em; letter-spacing:0; }
+.ring { position:relative; width:140px; height:140px; margin:4px auto 8px; }
+.ring svg { width:100%; height:100%; } .ring circle { fill:none; stroke-width:14; } .rtrack { stroke:var(--border); }
+.rarc { stroke:var(--accent); stroke-linecap:round; animation:draw .4s ease-out; } .ring.neg .rarc { stroke:var(--negative); }
+@keyframes draw { from { stroke-dasharray:0 999; } }
+.ring div { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.ring b { font-size:2rem; font-weight:600; letter-spacing:-.02em; line-height:1.1; } .ring small { font-size:.8rem; }
+.sub.center { text-align:center; }
 .chip { display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding:3px 10px; border-radius:999px; font-size:.8rem; font-weight:600; color:var(--text); white-space:nowrap; }
 .chip.bad { background:var(--negative-soft); } .chip.good { background:color-mix(in srgb, var(--positive) 14%, var(--surface)); }
 .hero { font-size:3.5rem; line-height:1.1; font-weight:600; letter-spacing:-.03em; } .sub { color:var(--text-muted); margin:4px 0 20px; }
@@ -104,7 +111,7 @@ small { color:var(--text-muted); }
 <details><summary>Показати таблицею</summary>
 <table><tr><th>Категорія</th><th>Сума</th><th>Частка</th></tr><tr><td>Житло</td><td>3 200,00 зл</td><td>40%</td></tr><tr><td>Продукти</td><td>2 370,86 зл</td><td>30%</td></tr><tr><td>Доставка їжі</td><td>674,51 зл</td><td>8%</td></tr><tr><td>Транспорт</td><td>481,77 зл</td><td>6%</td></tr><tr><td>Кафе</td><td>404,80 зл</td><td>5%</td></tr><tr><td>Підписки</td><td>179,48 зл</td><td>2%</td></tr><tr><td>Спорт</td><td>159,00 зл</td><td>2%</td></tr><tr><td>Електрика</td><td>142,30 зл</td><td>2%</td></tr><tr><td>Краса і побут</td><td>141,84 зл</td><td>2%</td></tr><tr><td>Мобільний оператор</td><td>100,00 зл</td><td>1%</td></tr><tr><td>Розваги</td><td>87,00 зл</td><td>1%</td></tr><tr><td>Інтернет</td><td>79,00 зл</td><td>1%</td></tr></table></details></section></div><div data-s="save" hidden>
 <section class="card"><h2>Скільки відкладено</h2>
-<div class="hero">53,9%</div><div class="sub">доходу відкладено (17 400 зл − 8 021 зл)</div>
+<div class="ring"><svg viewBox="0 0 140 140" aria-hidden="true"><g transform="rotate(-90 70 70)"><circle class="rtrack" r="63" cx="70" cy="70"/><circle class="rarc" r="63" cx="70" cy="70" stroke-dasharray="213.38 395.84"/></g></svg><div><b>53,9%</b><small>відкладено</small></div></div><div class="sub center">доходу відкладено (17 400 зл − 8 021 зл)</div>
 <div class="stack"><span class="seg a" style="flex:9379.44" title="Відкладено: 9 379,44 зл"></span><span class="seg b" style="flex:8020.56" title="Витрати: 8 020,56 зл"></span></div><div class="legend"><span class="key"><i class="sw a"></i>Відкладено <b>9 379 зл</b> · 54%</span><span class="key"><i class="sw b"></i>Витрати <b>8 021 зл</b> · 46%</span></div>
 <p class="verdict">Відкладено 9 379 зл із 17 400 зл.</p></section></div><div data-s="fixed" hidden>
 <section class="card"><h2>Фіксовані й змінні</h2>
@@ -119,7 +126,7 @@ small { color:var(--text-muted); }
 <details><summary>Показати таблицею</summary>
 <table><tr><th>Категорія</th><th>Сума</th><th>Частка</th></tr><tr><td>Житло</td><td>3 200,00 зл</td><td>56%</td></tr><tr><td>Продукти</td><td>1 293,01 зл</td><td>23%</td></tr><tr><td>Доставка їжі</td><td>394,35 зл</td><td>7%</td></tr><tr><td>Кафе</td><td>277,73 зл</td><td>5%</td></tr><tr><td>Транспорт</td><td>258,62 зл</td><td>5%</td></tr><tr><td>Підписки</td><td>153,49 зл</td><td>3%</td></tr><tr><td>Краса і побут</td><td>81,50 зл</td><td>1%</td></tr><tr><td>Мобільний оператор</td><td>45,00 зл</td><td>1%</td></tr></table></details></section></div><div data-s="save" hidden>
 <section class="card"><h2>Скільки відкладено</h2>
-<div class="hero">41,8%</div><div class="sub">доходу відкладено (9 800 зл − 5 704 зл)</div>
+<div class="ring"><svg viewBox="0 0 140 140" aria-hidden="true"><g transform="rotate(-90 70 70)"><circle class="rtrack" r="63" cx="70" cy="70"/><circle class="rarc" r="63" cx="70" cy="70" stroke-dasharray="165.46 395.84"/></g></svg><div><b>41,8%</b><small>відкладено</small></div></div><div class="sub center">доходу відкладено (9 800 зл − 5 704 зл)</div>
 <div class="stack"><span class="seg a" style="flex:4096.30" title="Відкладено: 4 096,30 зл"></span><span class="seg b" style="flex:5703.70" title="Витрати: 5 703,70 зл"></span></div><div class="legend"><span class="key"><i class="sw a"></i>Відкладено <b>4 096 зл</b> · 42%</span><span class="key"><i class="sw b"></i>Витрати <b>5 704 зл</b> · 58%</span></div>
 <p class="verdict">Відкладено 4 096 зл із 9 800 зл.</p></section></div><div data-s="fixed" hidden>
 <section class="card"><h2>Фіксовані й змінні</h2>
@@ -134,7 +141,7 @@ small { color:var(--text-muted); }
 <details><summary>Показати таблицею</summary>
 <table><tr><th>Категорія</th><th>Сума</th><th>Частка</th></tr><tr><td>Продукти</td><td>1 077,85 зл</td><td>47%</td></tr><tr><td>Доставка їжі</td><td>280,16 зл</td><td>12%</td></tr><tr><td>Транспорт</td><td>223,15 зл</td><td>10%</td></tr><tr><td>Спорт</td><td>159,00 зл</td><td>7%</td></tr><tr><td>Електрика</td><td>142,30 зл</td><td>6%</td></tr><tr><td>Кафе</td><td>127,07 зл</td><td>5%</td></tr><tr><td>Розваги</td><td>87,00 зл</td><td>4%</td></tr><tr><td>Інтернет</td><td>79,00 зл</td><td>3%</td></tr><tr><td>Краса і побут</td><td>60,34 зл</td><td>3%</td></tr><tr><td>Мобільний оператор</td><td>55,00 зл</td><td>2%</td></tr><tr><td>Підписки</td><td>25,99 зл</td><td>1%</td></tr></table></details></section></div><div data-s="save" hidden>
 <section class="card"><h2>Скільки відкладено</h2>
-<div class="hero">69,5%</div><div class="sub">доходу відкладено (7 600 зл − 2 317 зл)</div>
+<div class="ring"><svg viewBox="0 0 140 140" aria-hidden="true"><g transform="rotate(-90 70 70)"><circle class="rtrack" r="63" cx="70" cy="70"/><circle class="rarc" r="63" cx="70" cy="70" stroke-dasharray="275.17 395.84"/></g></svg><div><b>69,5%</b><small>відкладено</small></div></div><div class="sub center">доходу відкладено (7 600 зл − 2 317 зл)</div>
 <div class="stack"><span class="seg a" style="flex:5283.14" title="Відкладено: 5 283,14 зл"></span><span class="seg b" style="flex:2316.86" title="Витрати: 2 316,86 зл"></span></div><div class="legend"><span class="key"><i class="sw a"></i>Відкладено <b>5 283 зл</b> · 70%</span><span class="key"><i class="sw b"></i>Витрати <b>2 317 зл</b> · 30%</span></div>
 <p class="verdict">Відкладено 5 283 зл із 7 600 зл.</p></section></div><div data-s="fixed" hidden>
 <section class="card"><h2>Фіксовані й змінні</h2>
@@ -149,7 +156,7 @@ small { color:var(--text-muted); }
 <details><summary>Показати таблицею</summary>
 <table><tr><th>Категорія</th><th>Сума</th><th>Частка</th></tr><tr><td>Продукти</td><td>3 571,74 зл</td><td>40%</td></tr><tr><td>Житло</td><td>3 200,00 зл</td><td>36%</td></tr><tr><td>Доставка їжі</td><td>777,55 зл</td><td>9%</td></tr><tr><td>Транспорт</td><td>338,59 зл</td><td>4%</td></tr><tr><td>Спорт</td><td>302,18 зл</td><td>3%</td></tr><tr><td>Кафе</td><td>197,34 зл</td><td>2%</td></tr><tr><td>Підписки</td><td>179,48 зл</td><td>2%</td></tr><tr><td>Електрика</td><td>138,90 зл</td><td>2%</td></tr><tr><td>Мобільний оператор</td><td>100,00 зл</td><td>1%</td></tr><tr><td>Покупки</td><td>96,85 зл</td><td>1%</td></tr><tr><td>Інтернет</td><td>79,00 зл</td><td>1%</td></tr></table></details></section></div><div data-s="save" hidden>
 <section class="card"><h2>Скільки відкладено</h2>
-<div class="hero">48,4%</div><div class="sub">доходу відкладено (17 400 зл − 8 982 зл)</div>
+<div class="ring"><svg viewBox="0 0 140 140" aria-hidden="true"><g transform="rotate(-90 70 70)"><circle class="rtrack" r="63" cx="70" cy="70"/><circle class="rarc" r="63" cx="70" cy="70" stroke-dasharray="191.51 395.84"/></g></svg><div><b>48,4%</b><small>відкладено</small></div></div><div class="sub center">доходу відкладено (17 400 зл − 8 982 зл)</div>
 <div class="stack"><span class="seg a" style="flex:8418.37" title="Відкладено: 8 418,37 зл"></span><span class="seg b" style="flex:8981.63" title="Витрати: 8 981,63 зл"></span></div><div class="legend"><span class="key"><i class="sw a"></i>Відкладено <b>8 418 зл</b> · 48%</span><span class="key"><i class="sw b"></i>Витрати <b>8 982 зл</b> · 52%</span></div>
 <p class="verdict">Відкладено 8 418 зл із 17 400 зл.</p></section></div><div data-s="fixed" hidden>
 <section class="card"><h2>Фіксовані й змінні</h2>
@@ -164,7 +171,7 @@ small { color:var(--text-muted); }
 <details><summary>Показати таблицею</summary>
 <table><tr><th>Категорія</th><th>Сума</th><th>Частка</th></tr><tr><td>Житло</td><td>3 200,00 зл</td><td>53%</td></tr><tr><td>Продукти</td><td>1 672,07 зл</td><td>27%</td></tr><tr><td>Доставка їжі</td><td>484,23 зл</td><td>8%</td></tr><tr><td>Транспорт</td><td>249,22 зл</td><td>4%</td></tr><tr><td>Підписки</td><td>153,49 зл</td><td>3%</td></tr><tr><td>Кафе</td><td>143,72 зл</td><td>2%</td></tr><tr><td>Спорт</td><td>143,18 зл</td><td>2%</td></tr><tr><td>Мобільний оператор</td><td>45,00 зл</td><td>1%</td></tr></table></details></section></div><div data-s="save" hidden>
 <section class="card"><h2>Скільки відкладено</h2>
-<div class="hero">37,8%</div><div class="sub">доходу відкладено (9 800 зл − 6 091 зл)</div>
+<div class="ring"><svg viewBox="0 0 140 140" aria-hidden="true"><g transform="rotate(-90 70 70)"><circle class="rtrack" r="63" cx="70" cy="70"/><circle class="rarc" r="63" cx="70" cy="70" stroke-dasharray="149.82 395.84"/></g></svg><div><b>37,8%</b><small>відкладено</small></div></div><div class="sub center">доходу відкладено (9 800 зл − 6 091 зл)</div>
 <div class="stack"><span class="seg a" style="flex:3709.09" title="Відкладено: 3 709,09 зл"></span><span class="seg b" style="flex:6090.91" title="Витрати: 6 090,91 зл"></span></div><div class="legend"><span class="key"><i class="sw a"></i>Відкладено <b>3 709 зл</b> · 38%</span><span class="key"><i class="sw b"></i>Витрати <b>6 091 зл</b> · 62%</span></div>
 <p class="verdict">Відкладено 3 709 зл із 9 800 зл.</p></section></div><div data-s="fixed" hidden>
 <section class="card"><h2>Фіксовані й змінні</h2>
@@ -179,7 +186,7 @@ small { color:var(--text-muted); }
 <details><summary>Показати таблицею</summary>
 <table><tr><th>Категорія</th><th>Сума</th><th>Частка</th></tr><tr><td>Продукти</td><td>1 899,67 зл</td><td>66%</td></tr><tr><td>Доставка їжі</td><td>293,32 зл</td><td>10%</td></tr><tr><td>Спорт</td><td>159,00 зл</td><td>6%</td></tr><tr><td>Електрика</td><td>138,90 зл</td><td>5%</td></tr><tr><td>Покупки</td><td>96,85 зл</td><td>3%</td></tr><tr><td>Транспорт</td><td>89,37 зл</td><td>3%</td></tr><tr><td>Інтернет</td><td>79,00 зл</td><td>3%</td></tr><tr><td>Мобільний оператор</td><td>55,00 зл</td><td>2%</td></tr><tr><td>Кафе</td><td>53,62 зл</td><td>2%</td></tr><tr><td>Підписки</td><td>25,99 зл</td><td>1%</td></tr></table></details></section></div><div data-s="save" hidden>
 <section class="card"><h2>Скільки відкладено</h2>
-<div class="hero">62,0%</div><div class="sub">доходу відкладено (7 600 зл − 2 891 зл)</div>
+<div class="ring"><svg viewBox="0 0 140 140" aria-hidden="true"><g transform="rotate(-90 70 70)"><circle class="rtrack" r="63" cx="70" cy="70"/><circle class="rarc" r="63" cx="70" cy="70" stroke-dasharray="245.28 395.84"/></g></svg><div><b>62,0%</b><small>відкладено</small></div></div><div class="sub center">доходу відкладено (7 600 зл − 2 891 зл)</div>
 <div class="stack"><span class="seg a" style="flex:4709.28" title="Відкладено: 4 709,28 зл"></span><span class="seg b" style="flex:2890.72" title="Витрати: 2 890,72 зл"></span></div><div class="legend"><span class="key"><i class="sw a"></i>Відкладено <b>4 709 зл</b> · 62%</span><span class="key"><i class="sw b"></i>Витрати <b>2 891 зл</b> · 38%</span></div>
 <p class="verdict">Відкладено 4 709 зл із 7 600 зл.</p></section></div><div data-s="fixed" hidden>
 <section class="card"><h2>Фіксовані й змінні</h2>
@@ -194,7 +201,7 @@ small { color:var(--text-muted); }
 <details><summary>Показати таблицею</summary>
 <table><tr><th>Категорія</th><th>Сума</th><th>Частка</th></tr><tr><td>Житло</td><td>3 200,00 зл</td><td>48%</td></tr><tr><td>Продукти</td><td>1 640,92 зл</td><td>25%</td></tr><tr><td>Спорт</td><td>365,61 зл</td><td>6%</td></tr><tr><td>Доставка їжі</td><td>355,75 зл</td><td>5%</td></tr><tr><td>Транспорт</td><td>296,06 зл</td><td>4%</td></tr><tr><td>Кафе</td><td>234,56 зл</td><td>4%</td></tr><tr><td>Підписки</td><td>179,48 зл</td><td>3%</td></tr><tr><td>Покупки</td><td>94,05 зл</td><td>1%</td></tr><tr><td>Інтернет</td><td>79,00 зл</td><td>1%</td></tr><tr><td>Розваги</td><td>76,28 зл</td><td>1%</td></tr><tr><td>Мобільний оператор</td><td>55,00 зл</td><td>1%</td></tr><tr><td>Краса і побут</td><td>41,69 зл</td><td>1%</td></tr></table></details></section></div><div data-s="save" hidden>
 <section class="card"><h2>Скільки відкладено</h2>
-<div class="hero">32,5%</div><div class="sub">доходу відкладено (9 800 зл − 6 618 зл)</div>
+<div class="ring"><svg viewBox="0 0 140 140" aria-hidden="true"><g transform="rotate(-90 70 70)"><circle class="rtrack" r="63" cx="70" cy="70"/><circle class="rarc" r="63" cx="70" cy="70" stroke-dasharray="128.51 395.84"/></g></svg><div><b>32,5%</b><small>відкладено</small></div></div><div class="sub center">доходу відкладено (9 800 зл − 6 618 зл)</div>
 <div class="stack"><span class="seg a" style="flex:3181.60" title="Відкладено: 3 181,60 зл"></span><span class="seg b" style="flex:6618.40" title="Витрати: 6 618,40 зл"></span></div><div class="legend"><span class="key"><i class="sw a"></i>Відкладено <b>3 182 зл</b> · 32%</span><span class="key"><i class="sw b"></i>Витрати <b>6 618 зл</b> · 68%</span></div>
 <p class="verdict">Відкладено 3 182 зл із 9 800 зл. Місяць ще не закінчився, тому норма завищена.</p></section></div><div data-s="fixed" hidden>
 <section class="card"><h2>Фіксовані й змінні</h2>
@@ -209,7 +216,7 @@ small { color:var(--text-muted); }
 <details><summary>Показати таблицею</summary>
 <table><tr><th>Категорія</th><th>Сума</th><th>Частка</th></tr><tr><td>Житло</td><td>3 200,00 зл</td><td>64%</td></tr><tr><td>Продукти</td><td>977,84 зл</td><td>20%</td></tr><tr><td>Транспорт</td><td>207,36 зл</td><td>4%</td></tr><tr><td>Спорт</td><td>206,61 зл</td><td>4%</td></tr><tr><td>Підписки</td><td>153,49 зл</td><td>3%</td></tr><tr><td>Кафе</td><td>104,92 зл</td><td>2%</td></tr><tr><td>Доставка їжі</td><td>86,14 зл</td><td>2%</td></tr><tr><td>Краса і побут</td><td>41,69 зл</td><td>1%</td></tr></table></details></section></div><div data-s="save" hidden>
 <section class="card"><h2>Скільки відкладено</h2>
-<div class="hero">49,2%</div><div class="sub">доходу відкладено (9 800 зл − 4 978 зл)</div>
+<div class="ring"><svg viewBox="0 0 140 140" aria-hidden="true"><g transform="rotate(-90 70 70)"><circle class="rtrack" r="63" cx="70" cy="70"/><circle class="rarc" r="63" cx="70" cy="70" stroke-dasharray="194.77 395.84"/></g></svg><div><b>49,2%</b><small>відкладено</small></div></div><div class="sub center">доходу відкладено (9 800 зл − 4 978 зл)</div>
 <div class="stack"><span class="seg a" style="flex:4821.95" title="Відкладено: 4 821,95 зл"></span><span class="seg b" style="flex:4978.05" title="Витрати: 4 978,05 зл"></span></div><div class="legend"><span class="key"><i class="sw a"></i>Відкладено <b>4 822 зл</b> · 49%</span><span class="key"><i class="sw b"></i>Витрати <b>4 978 зл</b> · 51%</span></div>
 <p class="verdict">Відкладено 4 822 зл із 9 800 зл. Місяць ще не закінчився, тому норма завищена.</p></section></div><div data-s="fixed" hidden>
 <section class="card"><h2>Фіксовані й змінні</h2>
