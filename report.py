@@ -427,6 +427,9 @@ body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 Inter, -
 main { max-width:720px; margin:0 auto; padding:0 24px calc(160px + env(safe-area-inset-bottom, 0px)); /* кінець сторінки не ховається під «+» (84 + 60 + 16) */ padding-top:env(safe-area-inset-top, 0); }
 header { display:flex; align-items:center; gap:12px; margin:0 -24px; padding:14px 24px; border-bottom:1px solid var(--border); }
 h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em; }
+header h1 { display:flex; align-items:center; } /* без запасу під базову лінію: знак по центру з «пігулкою» */
+.brand { display:inline-flex; align-items:center; gap:8px; min-height:44px; color:var(--text, #1e3550); text-decoration:none; }
+.brand svg { flex:none; } .brand-name { font-size:20px; font-weight:600; letter-spacing:-.01em; }
 .nav { display:flex; gap:8px; align-items:center; }
 .btn { font:inherit; font-size:1rem; font-weight:600; border:0; border-radius:999px; padding:10px 20px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; background:var(--accent-strong); color:var(--on-accent); text-decoration:none; cursor:pointer; }
 .btn.ghost { background:var(--border); color:var(--text); }
@@ -449,7 +452,7 @@ h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em
 .tabbar button[aria-selected="true"] { color:var(--accent-strong); font-weight:600; } .tabbar button[aria-selected="true"] svg { stroke:var(--accent); }
 .tabbar svg { width:26px; height:26px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 .fab { position:fixed; z-index:1; right:max(24px, calc(50% - 336px)); bottom:calc(84px + env(safe-area-inset-bottom, 0px)); width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--accent-strong); color:var(--on-accent); font-size:2rem; font-weight:300; text-decoration:none; }
-.menu { position:relative; } .menu summary::-webkit-details-marker { display:none; }
+.menu { position:relative; margin-top:0; } /* загальне details{margin-top} лишилось від таблиці й зсувало «пігулку» вниз */ .menu summary::-webkit-details-marker { display:none; }
 .menu summary { list-style:none; display:flex; align-items:center; min-height:44px; padding:0 16px; border:1.5px solid var(--text); border-radius:999px; font-weight:600; cursor:pointer; }
 .menu-list { position:absolute; right:0; top:calc(100% + 8px); z-index:3; min-width:210px; display:flex; flex-direction:column; padding:6px; background:var(--surface); border:1px solid var(--border); border-radius:24px; }
 .menu-list a, .menu-list button { display:flex; align-items:center; width:100%; min-height:48px; padding:0 16px; border:0; border-radius:18px; background:none; color:var(--text); font:inherit; text-align:left; text-decoration:none; cursor:pointer; }
@@ -562,6 +565,14 @@ SPLASH = """<div id="splash" aria-hidden="true"><svg viewBox="40 0 900 960">
 </script>"""
 
 
+# Знак Trajet для шапки (той самий, що static/logo/trajet-mark.svg). Дорога — виріз маскою, тож знак працює на будь-якому тлі.
+BRAND = """<a class="brand" href="/" aria-label="Trajet"><svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true" focusable="false">
+<defs><mask id="trajet-road" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32"><rect width="32" height="32" fill="#fff"/>
+<path d="M3.2 24.8C10 25.6 20 24 25.4 19.6M8.6 15.6C12.6 15.8 16.2 14.8 18.4 12.6" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"/></mask></defs>
+<g mask="url(#trajet-road)"><path d="M14 6.5L19.6 14.4L21.6 12.6L30.5 27H1.5Z" fill="#2B4C70"/><path d="M14 6.5L19.6 14.4L21.6 12.6L30.5 27H17.5Z" fill="#739BBF"/></g>
+<path d="M13.25 7V1.4H14.75V7ZM14.6 1.4L19 3.1L14.6 4.8Z" fill="#1E3550"/></svg><span class="brand-name">Trajet</span></a>"""
+
+
 # Нижнє меню звіту: (ключ, підпис, іконка SVG).
 SECTIONS = [
     ("spend", "Витрати", '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>'),
@@ -602,9 +613,9 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
     return f"""<!doctype html>
 <html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Наші фінанси</title>{head}
+<title>Trajet</title>{head}
 <style>{CSS}</style></head><body>{SPLASH if splash else ""}<main>
-<header><h1>Наші фінанси</h1>{nav}</header>
+<header><h1>{BRAND}</h1>{nav}</header>
 {flash_html}
 <div class="sticky"><div class="tabs" role="tablist" id="people">{view_tabs}</div>
 <div class="tabs" role="tablist" id="months">{''.join(month_tabs)}</div></div>

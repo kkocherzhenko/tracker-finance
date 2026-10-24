@@ -112,11 +112,11 @@ def no_store(response):
 # ----- Сторінки -----
 HEAD = """
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/static/icon-192.png">
+<link rel="icon" type="image/svg+xml" href="/static/logo/trajet-mark.svg">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
 <meta name="theme-color" content="#e9eff3">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Фінанси">
+<meta name="apple-mobile-web-app-title" content="Trajet">
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>"""
 
 

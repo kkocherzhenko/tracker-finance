@@ -1,6 +1,6 @@
 // Service worker лише для встановлення на екран телефону і сторінки «немає інтернету».
 // Сторінки з даними навмисно не кешуємо: без входу і без мережі даних не видно.
-const CACHE = 'shell-v2';  // v2: нові іконки Trajet
+const CACHE = 'shell-v3';  // v3: іконки зі знаком Trajet
 const OFFLINE = '/static/offline.html';
 
 self.addEventListener('install', e => {
