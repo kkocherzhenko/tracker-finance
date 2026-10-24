@@ -8,6 +8,7 @@ import re
 import shutil
 import tempfile
 import unittest
+from decimal import Decimal
 from pathlib import Path
 
 from beancount import loader
@@ -19,6 +20,7 @@ os.environ["TRACKER_HASH_OLIA"] = generate_password_hash("olia-pass")
 os.environ["TRACKER_HASH_MARKO"] = generate_password_hash("marko-pass")
 
 import app  # noqa: E402
+import cashbook  # noqa: E402
 import report  # noqa: E402
 
 ROOT = Path(__file__).parent
@@ -107,6 +109,39 @@ class Privacy(unittest.TestCase):
         self.assertEqual(report.load_limits(), {"Expenses:Оля:Кафе": 250, "Expenses:Марко:Кафе": 99})
         self.client.post("/limits", data={"csrf": token, "account": "Expenses:Марко:Кафе", "remove": "1"})
         self.assertEqual(report.load_limits(), {"Expenses:Оля:Кафе": 250})
+
+    def add_cash(self, token, description, amount="12,50", shared="ні"):
+        r = self.client.post("/add", data={"csrf": token, "amount": amount, "description": description, "date": "2026-09-10",
+                                           "account": "Expenses:Оля:Кафе", "shared": shared})
+        self.assertEqual(r.status_code, 302)
+        return next(e for e in cashbook.entries(app.CASH) if e["description"] == description)
+
+    def test_owner_edits_and_deletes_own_cash(self):
+        token = self.login("olia")
+        e = self.add_cash(token, "Кава")
+        self.assertIn(f"?edit={e['id']}", self.client.get("/").text)
+        self.assertIn("Змінити транзакцію", self.client.get(f"/add?edit={e['id']}").text)
+        r = self.client.post("/add", data={"csrf": token, "edit": e["id"], "amount": "15", "description": "Кава", "date": "2026-09-10",
+                                           "account": "Expenses:Оля:Кафе", "shared": "так"})
+        self.assertEqual(r.status_code, 302)
+        e2 = next(x for x in cashbook.entries(app.CASH) if x["description"] == "Кава")
+        self.assertEqual((e2["amount"], e2["shared"]), (Decimal("15.00"), True))
+        self.client.post("/delete", data={"csrf": token, "edit": e2["id"]})
+        self.assertFalse([x for x in cashbook.entries(app.CASH) if x["description"] == "Кава"])
+
+    def test_cannot_edit_or_delete_other_persons_cash(self):
+        e = self.add_cash(self.login("olia"), "Спільна кава", shared="так")
+        self.client = app.app.test_client()
+        token = self.login("marko")
+        page = self.client.get("/").text
+        self.assertIn("Спільна кава", page)  # спільну видно…
+        self.assertNotIn(f"?edit={e['id']}", page)  # …але без «Змінити»
+        self.assertEqual(self.client.get(f"/add?edit={e['id']}").status_code, 404)
+        data = {"csrf": token, "edit": e["id"], "amount": "1", "description": "x", "date": "2026-09-10",
+                "account": "Expenses:Марко:Кафе", "shared": "так"}
+        self.assertEqual(self.client.post("/add", data=data).status_code, 404)
+        self.assertEqual(self.client.post("/delete", data={"csrf": token, "edit": e["id"]}).status_code, 404)
+        self.assertEqual(cashbook.entries(app.CASH), [e])
 
     def test_no_data_without_login_and_no_fava(self):
         for path in ("/", "/add", "/limits"):

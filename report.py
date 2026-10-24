@@ -17,6 +17,8 @@ import beanquery
 from beancount import loader
 from beancount.core import data
 
+import cashbook
+
 ROOT = Path(__file__).parent
 LEDGER = ROOT / "main.beancount"
 LIMITS = ROOT / "limits.csv"
@@ -393,13 +395,17 @@ def block_limits(rows, view, viewer, settings_url, last=None):
     return f'<section class="card"><h2>Ліміти на місяць</h2>{"".join(items)}{link}</section>'
 
 
-def block_cash(d, key, view):
+def block_cash(d, key, view, viewer=None, edit_url="", ids=None):
+    """Готівка місяця; біля своїх записів — посилання «Змінити» (чужі змінювати не можна)."""
     rows = d["cash"][key, view]
     if not rows:
         return ""
+    def edit(r):
+        eid = (ids or {}).get((r["date"].isoformat(), r["narration"], r["number"], r["person"]))
+        return f'<br><a class="editlink" href="{edit_url}{eid}">Змінити</a>' if edit_url and eid and r["person"] == viewer else ""
     items = "".join(
         f"<tr><td>{r['date'].day} {MONTH_GEN[r['date'].month]}</td><td>{escape(r['person'])}</td>"
-        f"<td>{escape(r['narration'])}<br><small>{escape(category_name(r['category']))}</small></td>"
+        f"<td>{escape(r['narration'])}<br><small>{escape(category_name(r['category']))}</small>{edit(r)}</td>"
         f"<td>{zl(r['number'])}</td></tr>"
         for r in rows
     )
@@ -454,7 +460,7 @@ header h1 { display:flex; align-items:center; } /* без запасу під б
 .sticky { position:sticky; top:0; z-index:1; background:var(--bg); padding:12px 0 4px; }
 .tabs { display:flex; }
 #people { background:var(--border); border-radius:999px; padding:4px; }
-#people button { flex:1; min-height:44px; font:inherit; font-size:.95rem; color:var(--text); background:none; border:0; border-radius:999px; cursor:pointer; }
+#people button { flex:1 1 auto; min-width:0; padding:0 4px; white-space:nowrap; min-height:44px; font:inherit; font-size:clamp(.8rem, 3.7vw, .95rem); color:var(--text); background:none; border:0; border-radius:999px; cursor:pointer; }
 #people button[aria-selected="true"] { background:var(--accent-strong); color:var(--on-accent); font-weight:600; }
 #months { justify-content:center; gap:4px; margin-top:4px; }
 #months button { min-height:44px; padding:0 12px; font:inherit; font-size:.95rem; font-weight:500; color:var(--text-muted); background:none; border:0; border-bottom:2px solid transparent; cursor:pointer; }
@@ -548,6 +554,7 @@ td:last-child, th:last-child { text-align:right; white-space:nowrap; }
 small { color:var(--text-muted); }
 .month[hidden] { display:none; }
 .foot { color:var(--text-muted); font-size:.85rem; }
+.editlink { display:inline-flex; align-items:center; min-height:44px; font-size:.9rem; }
 """
 
 
@@ -600,10 +607,12 @@ SECTIONS = [
 ]
 
 
-def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None, settings_url="", splash=False):
+def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None, settings_url="", splash=False, edit_url=""):
     """Повна HTML-сторінка звіту. head/nav/flash/viewer/settings_url — додатки від веб-застосунку."""
     d = load(ledger, viewer)
     limit_table = load_limits(limits)
+    ids = {(e["date"], e["description"], e["amount"], e["person"]): e["id"]
+           for e in cashbook.entries(Path(ledger).parent / "cash.beancount")} if edit_url else {}
     other = next(p for p in PEOPLE if p != viewer) if viewer else None
     keys = d["keys"]
     default = next((k for k in reversed(keys) if "закінчено" in month_caption(d, k)), keys[-1])
@@ -623,7 +632,7 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
             rows = limit_rows(d, k, v, viewer, limit_table)
             panels.append(
                 f'<div class="month" data-m="{month_id(k)}" data-p="{v}" hidden>{limits_banner(rows)}'
-                f'<div data-s="spend">{block_categories(d, k, v, partial)}{block_cash(d, k, v)}</div>'
+                f'<div data-s="spend">{block_categories(d, k, v, partial)}{block_cash(d, k, v, viewer, edit_url, ids)}</div>'
                 f'<div data-s="save" hidden>{block_savings(d, k, v, partial, v == other)}</div>'
                 f'<div data-s="fixed" hidden>{block_fixed(d, k, v)}</div>'
                 f'<div data-s="limits" hidden>{block_limits(rows, v, viewer, settings_url, d["last_day"][k] if partial else None)}</div></div>'

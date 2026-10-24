@@ -155,6 +155,7 @@ fieldset .radios + input {{ margin-top:8px; }}
 .lrow:last-child {{ border-bottom:0; }} .lrow b {{ font-weight:600; }} .lrow b::after {{ content:"›"; color:var(--text-muted); font-weight:400; margin-left:12px; }}
 .stackbtn {{ display:flex; flex-direction:column; gap:8px; }}
 .btn.wide {{ width:100%; min-height:56px; font-size:1.05rem; }}
+.delform {{ margin:8px 0 0; }}
 .error {{ display:flex; gap:8px; align-items:flex-start; margin:0 0 16px; color:var(--negative); font-weight:500; }}
 .error svg {{ flex:none; width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; }}
 body:has(.login) {{ background:linear-gradient(to bottom, var(--bg), color-mix(in srgb, var(--accent) 15%, var(--bg))) fixed; }}
@@ -226,7 +227,16 @@ def index():
     flash = ""
     if "added" in session:
         flash = escape(session.pop("added"))
-    return report.render(LEDGER, head=HEAD, nav=nav(), flash=flash, viewer=me(), settings_url=url_for("limits"), splash=True)
+    return report.render(LEDGER, head=HEAD, nav=nav(), flash=flash, viewer=me(), settings_url=url_for("limits"), splash=True,
+                         edit_url=url_for("add") + "?edit=")
+
+
+def own_entry(eid):
+    """Свій запис готівки за відбитком; чужий або неіснуючий — 404, навіть якщо його видно як спільний."""
+    found = next((e for e in cashbook.entries(CASH) if e["id"] == eid and e["person"] == me()), None)
+    if not found:
+        abort(404)
+    return found
 
 
 def expense_accounts():
@@ -244,6 +254,11 @@ def add():
     accounts = expense_accounts()[me()]
     today = datetime.now(WARSAW).date()
     form = {"date": today.isoformat(), "amount": "", "account": "", "description": "", "shared": "ні"}
+    edit = request.values.get("edit", "")  # відбиток запису, якщо змінюємо наявний
+    if edit:
+        old = own_entry(edit)
+        form.update(date=old["date"], amount=f"{old['amount']:.2f}".replace(".", ","), account=old["account"],
+                    description=old["description"], shared="так" if old["shared"] else "ні")
     error = ""
     if request.method == "POST":
         check_csrf()
@@ -254,12 +269,15 @@ def add():
             error = str(e)
         else:
             try:
-                cashbook.append(CASH, LEDGER, entry)
+                if edit:
+                    cashbook.replace(CASH, LEDGER, edit, entry)
+                else:
+                    cashbook.append(CASH, LEDGER, entry)
             except ValueError as e:
                 error = str(e)
             else:
                 kind = "спільна" if entry["shared"] else "особиста"
-                session["added"] = f"Додано: {entry['description']}, {report.zl(entry['amount'])} ({kind})."
+                session["added"] = f"{'Змінено' if edit else 'Додано'}: {entry['description']}, {report.zl(entry['amount'])} ({kind})."
                 return redirect(f"{url_for('index')}?p={entry['person']}&m={entry['date']:%Y-%m}")
     cats = "".join(
         f'<label class="cat"><input type="radio" name="account" value="{a}" required{" checked" if a == form["account"] else ""}>'
@@ -276,10 +294,14 @@ def add():
         f'<label><input type="radio" name="shared" value="{v}"{" checked" if v == form["shared"] else ""}><span>{label}</span></label>'
         for v, label in (("ні", "Особиста"), ("так", "Спільна"))
     )
-    return page("Нова транзакція", f"""
-<header><h1>Нова транзакція</h1><nav class="nav"><a class="btn ghost" href="{url_for('index')}">До звіту</a></nav></header>
+    title = "Змінити транзакцію" if edit else "Нова транзакція"
+    remove = (f'<form method="post" action="{url_for("delete")}" class="delform"><input type="hidden" name="csrf" value="{csrf_token()}">'
+              f'<input type="hidden" name="edit" value="{escape(edit)}"><button class="btn ghost wide" type="submit" '
+              f'data-q="{escape("Видалити «" + form["description"] + "»?")}" onclick="return confirm(this.dataset.q)">Видалити транзакцію</button></form>') if edit else ""
+    return page(title, f"""
+<header><h1>{title}</h1><nav class="nav"><a class="btn ghost" href="{url_for('index')}">До звіту</a></nav></header>
 <form method="post" class="pay">
-<input type="hidden" name="csrf" value="{csrf_token()}">
+<input type="hidden" name="csrf" value="{csrf_token()}">{f'<input type="hidden" name="edit" value="{escape(edit)}">' if edit else ''}
 <section class="card">
 {error_html(error)}
 <label class="amount"><span class="sr">Сума, зл</span><input name="amount" inputmode="decimal" placeholder="0" value="{escape(form['amount'])}" required autofocus><span class="cur" aria-hidden="true">зл</span></label>
@@ -289,8 +311,8 @@ def add():
 <input name="date" type="date" min="2026-08-01" max="{today + timedelta(days=1)}" value="{escape(form['date'])}" required aria-label="Дата"></fieldset>
 <div class="field"><span>Хто бачить</span><div class="radios">{shared}</div></div>
 </section>
-<div class="savebar"><button class="btn wide" type="submit">Зберегти</button></div>
-</form>
+<div class="savebar"><button class="btn wide" type="submit">{"Зберегти зміни" if edit else "Зберегти"}</button></div>
+</form>{remove}
 <script>
 // «Сьогодні» / «Вчора» ставлять дату самі; поле дати видно лише для «Інша дата». Без JS поле видно завжди.
 const f = document.querySelector('form.pay');
@@ -303,6 +325,20 @@ function syncDate() {{
 f.querySelectorAll('[name=when]').forEach(r => r.addEventListener('change', syncDate));
 syncDate();
 </script>""")
+
+
+@app.post("/delete")
+def delete():
+    """Видаляє свій запис готівки (після підтвердження в браузері)."""
+    check_csrf()
+    old = own_entry(request.form.get("edit", ""))
+    try:
+        cashbook.remove(CASH, LEDGER, old["id"])
+    except ValueError as e:
+        session["added"] = str(e)
+        return redirect(url_for("index"))
+    session["added"] = f"Видалено: {old['description']}, {report.zl(old['amount'])}."
+    return redirect(f"{url_for('index')}?p={me()}&m={old['date'][:7]}")
 
 
 def money(text):
