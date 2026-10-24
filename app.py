@@ -30,7 +30,6 @@ from werkzeug.security import check_password_hash
 
 import cashbook
 import report
-from ui_strings import say
 
 ROOT = Path(__file__).parent
 LEDGER = ROOT / "main.beancount"
@@ -127,53 +126,42 @@ def page(title, body):
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{title}</title>{HEAD}
 <style>{report.CSS}
-form .field {{ display:block; margin:0 0 20px; }}
-form .field > span, fieldset.field > legend {{ display:block; padding:0; margin-bottom:6px; color:var(--text-muted); font-size:.9rem; }}
-fieldset.field {{ border:0; padding:0; margin:0 0 20px; min-width:0; }}
-input, select {{ width:100%; min-height:48px; padding:10px 14px; border:1px solid var(--text-muted); border-radius:var(--r-s); background:var(--surface); color:var(--text); font:inherit; font-size:1rem; }}
-input:focus, select:focus {{ outline:2px solid var(--accent-strong); outline-offset:1px; }}
+form .field {{ display:block; margin:0 0 20px; }} form .field > span {{ display:block; color:var(--text-muted); font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; margin-bottom:6px; }}
+input, select {{ font:inherit; font-size:1.05rem; width:100%; min-height:52px; padding:12px 18px; border-radius:16px; border:1px solid transparent; background:var(--border); color:var(--text); }}
+input:focus, select:focus {{ outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent-strong); background:var(--surface); }}
 input::placeholder {{ color:var(--text-muted); opacity:1; }}
-select {{ -webkit-appearance:none; appearance:none; padding-right:40px; background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%234f6277' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center; }} /* стрілка: колір --text-muted, у data-URI змінні не працюють */
+select {{ -webkit-appearance:none; appearance:none; padding-right:44px; background:var(--border) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%234f6277' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 18px center; }} /* стрілка: колір --text-muted, у data-URI змінні не працюють */
+input[name=amount] {{ font-size:3rem; font-weight:500; letter-spacing:-.04em; padding:8px 18px; }}
 .sr {{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }}
-/* Сума — великою цифрою, «зл» поруч; поле росте разом із числом */
-.amount {{ display:flex; align-items:baseline; gap:6px; margin:4px 0 24px; padding-bottom:6px; border-bottom:1px solid var(--text-muted); font-size:3.5rem; }}
-.amount input[name=amount] {{ flex:0 1 auto; width:6.5ch; field-sizing:content; min-width:1.5ch; max-width:100%; min-height:0; padding:0; border:0; border-radius:0; background:none; font:300 1em/1.1 var(--font-display); letter-spacing:-.03em; font-variant-numeric:lining-nums tabular-nums; outline-offset:6px; }}
-.amount .cur {{ margin:0; font-size:.4em; }}
-.tiles {{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }}
-.tile {{ position:relative; }} .tile input {{ position:absolute; inset:0; width:100%; height:100%; min-height:0; margin:0; opacity:0; }}
-.tile span {{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:76px; padding:10px 4px; border-radius:var(--r-m); background:var(--soft); font-size:.85rem; line-height:1.2; text-align:center; cursor:pointer; }}
-.tile svg {{ width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }}
-.tile input:checked + span {{ background:var(--accent-strong); color:var(--on-accent); }}
-.tile input:focus-visible + span, .radios input:focus-visible + span {{ outline:2px solid var(--accent-strong); outline-offset:2px; }}
-.radios {{ display:flex; gap:4px; padding:4px; border-radius:var(--r-full); background:var(--soft); }} .radios label {{ position:relative; flex:1; }}
-.radios input {{ position:absolute; inset:0; width:100%; height:100%; min-height:0; margin:0; opacity:0; }}
-.radios span {{ display:block; min-height:44px; padding:10px 6px; border-radius:var(--r-full); text-align:center; white-space:nowrap; cursor:pointer; }}
-.radios input:checked + span {{ background:var(--accent-strong); color:var(--on-accent); font-weight:600; }}
-.tile span, .radios span {{ transition:transform .1s ease-out; }} .tile span:active, .radios span:active {{ transform:scale(.97); }}
+.amount {{ display:flex; align-items:baseline; gap:8px; margin:4px 0 24px; font-size:2.75rem; }}
+.amount input[name=amount] {{ flex:1 1 0; min-width:0; min-height:0; padding:0; border:0; background:none; font-size:inherit; font-weight:600; letter-spacing:-.03em; text-align:right; }}
+.amount .cur {{ flex:1 1 0; margin:0; font-size:.5em; }}
+fieldset.field {{ border:0; padding:0; margin:0 0 20px; min-width:0; }}
+fieldset.field > legend {{ padding:0; margin-bottom:6px; color:var(--text-muted); font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; }}
 fieldset .radios + input {{ margin-top:8px; }}
-.savebar {{ position:sticky; bottom:0; margin:0 -24px; padding:12px 24px calc(12px + env(safe-area-inset-bottom, 0px)); border-top:1px solid var(--border); background:var(--base); }}
-.lrow {{ display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:52px; border-top:1px solid var(--border); color:var(--text); text-decoration:none; }}
-.lrow:first-of-type {{ border-top:0; }} .lrow b::after {{ content:"›"; margin-left:12px; color:var(--text-muted); font-weight:400; }}
+.cats {{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }}
+.cat {{ position:relative; }} .cat input {{ position:absolute; inset:0; width:100%; height:100%; min-height:0; margin:0; opacity:0; }}
+.cat span {{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:76px; padding:10px 4px; border:1.5px solid transparent; border-radius:16px; background:color-mix(in srgb, var(--border) 50%, var(--surface)); font-size:.8rem; line-height:1.2; text-align:center; cursor:pointer; }}
+.cat svg {{ width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }}
+.cat input:checked + span {{ border-color:var(--accent-strong); background:var(--surface); font-weight:600; }}
+.cat span:active, .radios span:active {{ transform:scale(.98); }}
+.cat input:focus-visible + span {{ outline:2px solid var(--accent); outline-offset:2px; }}
+.savebar {{ position:sticky; bottom:0; margin:0 -24px; padding:12px 24px calc(12px + env(safe-area-inset-bottom, 0px)); background:linear-gradient(to bottom, transparent, var(--bg) 35%); }}
+.radios {{ display:flex; gap:4px; padding:4px; background:var(--border); border-radius:999px; }} .radios label {{ flex:1; }} .radios label {{ position:relative; }} .radios input {{ position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; }}
+.radios span {{ display:block; text-align:center; padding:10px 6px; min-height:44px; border-radius:999px; white-space:nowrap; cursor:pointer; }}
+.radios input:checked + span {{ background:var(--accent-strong); color:var(--on-accent); font-weight:600; }}
+.radios input:focus-visible + span {{ outline:2px solid var(--accent); outline-offset:2px; }}
+.lrow {{ display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:56px; border-bottom:1px solid var(--border); color:var(--text); text-decoration:none; }}
+.lrow:last-child {{ border-bottom:0; }} .lrow b {{ font-weight:600; }} .lrow b::after {{ content:"›"; color:var(--text-muted); font-weight:400; margin-left:12px; }}
 .stackbtn {{ display:flex; flex-direction:column; gap:8px; }}
-.btn.wide {{ width:100%; min-height:52px; }}
-/* Завантаження: на кнопці «йде» пунктирна тропа */
-.btn.busy::before {{ content:""; width:28px; height:8px; margin-right:10px; background:currentColor; -webkit-mask:repeating-linear-gradient(90deg, #000 0 4px, transparent 4px 8px); mask:repeating-linear-gradient(90deg, #000 0 4px, transparent 4px 8px); animation:walk .6s linear infinite; }}
-@keyframes walk {{ to {{ -webkit-mask-position:8px 0; mask-position:8px 0; }} }}
-.error {{ display:flex; gap:8px; align-items:flex-start; margin:0 0 16px; color:var(--text); }}
-.error svg {{ flex:none; width:22px; height:22px; fill:none; stroke:var(--negative); stroke-width:1.8; stroke-linecap:round; }}
+.btn.wide {{ width:100%; min-height:56px; font-size:1.05rem; }}
+.error {{ display:flex; gap:8px; align-items:flex-start; margin:0 0 16px; color:var(--negative); font-weight:500; }}
+.error svg {{ flex:none; width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; }}
+body:has(.login) {{ background:linear-gradient(to bottom, var(--bg), color-mix(in srgb, var(--accent) 15%, var(--bg))) fixed; }}
 main:has(.login) {{ padding-bottom:24px; }}
-.login {{ min-height:calc(100dvh - 24px); max-width:420px; display:flex; flex-direction:column; justify-content:center; }}
-.login .peak {{ width:96px; height:72px; }} .login h1 {{ flex:none; margin:20px 0 4px; font-size:2.2rem; }} .login .lede {{ margin:0 0 28px; }}
-</style></head><body><main>{body}</main>
-<script>
-// Одна відправка форми: кнопка показує тропу і «Зберігаю…»; кнопку не вимикаємо, щоб її name/value дійшли на сервер.
-document.querySelectorAll('form').forEach(f => f.addEventListener('submit', e => {{
-  if (f.dataset.sent) return e.preventDefault();
-  f.dataset.sent = 1;
-  const b = e.submitter;
-  if (b && b.dataset.busy) {{ b.classList.add('busy'); b.setAttribute('aria-busy', 'true'); b.textContent = b.dataset.busy; }}
-}}));
-</script></body></html>"""
+.login {{ min-height:calc(100dvh - 24px); max-width:420px; margin:0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; }}
+.login img {{ border-radius:16px; }} .login h1 {{ flex:none; margin:12px 0 4px; text-align:center; }} .login .card {{ width:100%; }}
+</style></head><body><main>{body}</main></body></html>"""
 
 
 def error_html(error):
@@ -185,7 +173,7 @@ def error_html(error):
 
 
 def nav():
-    return f"""<a class="fab" href="{url_for('add')}" aria-label="Додати готівку"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+    return f"""<a class="fab" href="{url_for('add')}" aria-label="Додати готівку">+</a>
 <details class="menu"><summary aria-label="Меню: {me()}">{me()}</summary>
 <div class="menu-list"><a href="{url_for('add')}">+ Готівка</a><a href="{url_for('limits')}">Ліміти</a>
 <form method="post" action="{url_for('logout')}"><input type="hidden" name="csrf" value="{csrf_token()}">
@@ -215,13 +203,13 @@ def login():
     if not USERS:
         error = "Вхід ще не налаштовано: на сервері немає хешів паролів (make_env.py)."
     return page("Вхід", f"""
-<div class="login">{report.PEAK}<h1>Наші фінанси</h1><p class="lede">Спокійно про спільні гроші.</p>
-<section><form method="post">
+<div class="login"><img src="/static/icon-192.png" alt="" width="64" height="64"><h1>Наші фінанси</h1>
+<section class="card"><form method="post">
 <input type="hidden" name="csrf" value="{csrf_token()}">
 {error_html(error)}
 <label class="field"><span>Логін</span><input name="login" autocomplete="username" autocapitalize="none" required></label>
 <label class="field"><span>Пароль</span><input name="password" type="password" autocomplete="current-password" required></label>
-<button class="btn wide" type="submit" data-busy="Входжу…">Увійти</button>
+<button class="btn wide" type="submit">Увійти</button>
 </form></section></div>""")
 
 
@@ -269,11 +257,11 @@ def add():
             except ValueError as e:
                 error = str(e)
             else:
-                session["added"] = say("added", amount=report.zl(entry["amount"]), kind="спільна" if entry["shared"] else "особиста",
-                                       category=report.category_name(entry["account"].rsplit(":", 1)[1]))
+                kind = "спільна" if entry["shared"] else "особиста"
+                session["added"] = f"Додано: {entry['description']}, {report.zl(entry['amount'])} ({kind})."
                 return redirect(f"{url_for('index')}?p={entry['person']}&m={entry['date']:%Y-%m}")
     cats = "".join(
-        f'<label class="tile"><input type="radio" name="account" value="{a}" required{" checked" if a == form["account"] else ""}>'
+        f'<label class="cat"><input type="radio" name="account" value="{a}" required{" checked" if a == form["account"] else ""}>'
         f'<span>{report.icon(report.category_name(a.rsplit(":", 1)[1]))}{report.category_name(a.rsplit(":", 1)[1])}</span></label>'
         for a in accounts
     )
@@ -291,16 +279,16 @@ def add():
 <header><h1>Готівка</h1><nav class="nav"><a class="btn ghost" href="{url_for('index')}">До звіту</a></nav></header>
 <form method="post" class="pay">
 <input type="hidden" name="csrf" value="{csrf_token()}">
-<section class="sec">
+<section class="card">
 {error_html(error)}
 <label class="amount"><span class="sr">Сума, зл</span><input name="amount" inputmode="decimal" placeholder="0" value="{escape(form['amount'])}" required autofocus><span class="cur" aria-hidden="true">зл</span></label>
 <label class="field"><span>Що купили</span><input name="description" maxlength="80" placeholder="Кава на ринку" value="{escape(form['description'])}" required></label>
-<fieldset class="field"><legend>Категорія</legend><div class="tiles">{cats}</div></fieldset>
+<fieldset class="field"><legend>Категорія</legend><div class="cats">{cats}</div></fieldset>
 <fieldset class="field"><legend>Дата</legend><div class="radios">{dates}</div>
 <input name="date" type="date" min="2026-08-01" max="{today + timedelta(days=1)}" value="{escape(form['date'])}" required aria-label="Дата"></fieldset>
 <div class="field"><span>Хто бачить</span><div class="radios">{shared}</div></div>
 </section>
-<div class="savebar"><button class="btn wide" type="submit" data-busy="{say("busy")}">Зберегти</button></div>
+<div class="savebar"><button class="btn wide" type="submit">Зберегти</button></div>
 </form>
 <script>
 // «Сьогодні» / «Вчора» ставлять дату самі; поле дати видно лише для «Інша дата». Без JS поле видно завжди.
@@ -313,10 +301,6 @@ function syncDate() {{
 }}
 f.querySelectorAll('[name=when]').forEach(r => r.addEventListener('change', syncDate));
 syncDate();
-// Поле суми завширшки з число, щоб «зл» стояло одразу за ним (field-sizing є не в усіх браузерах).
-const amt = f.amount;
-const fit = () => {{ amt.style.width = '0'; amt.style.width = amt.scrollWidth + 4 + 'px'; }};
-amt.addEventListener('input', fit); document.fonts.ready.then(fit); fit();
 </script>
 <p class="foot">Платить {me()}. Особисту витрату бачите лише ви, спільну — обоє.</p>""")
 
@@ -398,14 +382,14 @@ def limits():
     return page("Ліміти", f"""
 <header><h1>Ліміти</h1><nav class="nav"><a class="btn ghost" href="{url_for('index')}">До звіту</a></nav></header>
 {f'<p class="flash" role="status">{flash}</p>' if flash else ''}
-<section class="sec"><h2>Задати ліміт</h2><form method="post">
+<section class="card"><h2>Задати ліміт</h2><form method="post">
 <input type="hidden" name="csrf" value="{csrf_token()}">
 {error_html(error)}
 <label class="field"><span>Категорія</span><select name="account" onchange="location.href='?account='+encodeURIComponent(this.value)">{options}</select></label>
 <label class="field"><span>Ліміт на місяць, зл</span><input name="amount" inputmode="decimal" placeholder="500" value="{escape(amount)}" required></label>
-<div class="stackbtn"><button class="btn wide" type="submit" data-busy="{say("busy")}">Зберегти ліміт</button>{remove}</div>
+<div class="stackbtn"><button class="btn wide" type="submit">Зберегти</button>{remove}</div>
 </form></section>
-<section class="sec"><h2>Встановлені ліміти · {me()}</h2>{rows}</section>""")
+<section class="card"><h2>Встановлені ліміти · {me()}</h2>{rows}</section>""")
 
 
 def save_limits(mine):

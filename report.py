@@ -17,8 +17,6 @@ import beanquery
 from beancount import loader
 from beancount.core import data
 
-from ui_strings import MONTH_LOC, say
-
 ROOT = Path(__file__).parent
 LEDGER = ROOT / "main.beancount"
 LIMITS = ROOT / "limits.csv"
@@ -68,7 +66,7 @@ def zl(x, decimals=2):
 
 def zl_html(x, decimals=0):
     """Як zl(), але «зл» менше і сірим — для великих сум. zl() лишається текстом для title і тестів."""
-    return f'<span class="num" data-n="{x:.{decimals}f}">{zl(x, decimals)[:-3]}</span><span class="cur">зл</span>'
+    return zl(x, decimals)[:-3] + '<span class="cur">зл</span>'
 
 
 def pct(a, b, decimals=0):
@@ -160,49 +158,48 @@ def month_caption(d, key):
     return "місяць закінчено"
 
 
-def hero_sentence(d, key, view, rows, partial):
-    """Одне людське речення під сумою: на що пішло найбільше і як проти минулого місяця."""
-    parts = [say("top", category=rows[0][0], amount=zl(rows[0][1], 0))]
+def delta_chip(d, key, view, total, partial):
+    """«▲ 12% до серпня»: витрати проти попереднього місяця. Для неповного — «дані до …», для першого — нічого."""
     if partial:
         last = d["last_day"][key]
-        parts.insert(0, say("partial", day=f"{last.day} {MONTH_GEN[last.month]}"))
-    else:
-        i = d["keys"].index(key)
-        prev = sum(d["categories"].get((d["keys"][i - 1], view), {}).values()) if i else 0
-        total = sum(v for _, v in rows)
-        if prev > 0 and total != prev:
-            parts.append(say("more" if total > prev else "less", pct=pct(abs(total - prev), prev), month=MONTH_LOC[d["keys"][i - 1][1]]))
-    return " ".join(parts)
+        return f'<span class="chip info">дані до {last.day} {MONTH_GEN[last.month]}</span>'
+    i = d["keys"].index(key)
+    prev = sum(d["categories"].get((d["keys"][i - 1], view), {}).values()) if i else 0
+    if prev <= 0:
+        return ""
+    up = total > prev
+    return (f'<span class="chip {"bad" if up else "good"}">{"▲" if up else "▼"} '
+            f'{pct(abs(total - prev), prev)} до {MONTH_GEN[d["keys"][i - 1][1]]}</span>')
 
 
 def block_categories(d, key, view, partial):
     rows = sorted(d["categories"][key, view].items(), key=lambda kv: -kv[1])
     if not rows:
-        return empty("Куди йдуть гроші", say("empty_spend"))
+        return empty("Куди йдуть гроші", SECTIONS[0][2], "Витрат за цей місяць немає.")
     total = sum(v for _, v in rows)
     top = rows[0][1] or Decimal(1)
-    # Смуга лише в трьох найбільших; решта — звичайний рядок. Колір точки збігається з кільцем на слайді 2.
-    items = "".join(
-        f'<li class="cat{" top" if i < 3 else ""}{" faded" if i >= 8 else ""}" style="--c:var(--cat{i % 8 + 1})">'
-        f'<span class="dot"></span><span class="name">{escape(n)}</span><span class="share">{pct(v, total)}</span>'
-        f'<span class="val">{zl(v, 0)}</span>'
-        + (f'<span class="track"><span class="bar" style="width:{max(v, 0) / top * 100:.1f}%"></span></span>' if i < 3 else "")
-        + "</li>"
-        for i, (n, v) in enumerate(rows)
+    bars = "".join(
+        f'<div class="row" title="{escape(n)}: {zl(v)}, {pct(v, total)} витрат">'
+        f'<span class="ico">{icon(n)}</span><span class="name">{escape(n)}</span><span class="val">{zl(v, 0)}</span>'
+        f'<span class="meta"><small>{pct(v, total)}</small>'
+        f'<span class="track"><span class="bar" style="width:{max(v, 0) / top * 100:.1f}%"></span></span></span></div>'
+        for n, v in rows
     )
     table = "".join(
         f"<tr><td>{escape(n)}</td><td>{zl(v)}</td><td>{pct(v, total)}</td></tr>" for n, v in rows
     )
     legend = "".join(
-        f'<li class="{"faded" if i >= 8 else ""}" style="--c:var(--cat{i % 8 + 1})"><span class="dot"></span>{escape(n)} <b>{pct(v, total)}</b></li>'
+        f'<li><i class="sw" style="background:var(--cat{i % 8 + 1}){"; opacity:.6" if i >= 8 else ""}"></i>{escape(n)} <b>{pct(v, total)}</b></li>'
         for i, (n, v) in enumerate(rows)
     )
-    # Два слайди (scroll-snap): 1 — сума і список, 2 — кільце із сумою в центрі. Сума видна один раз.
+    verdict = f"Найбільша стаття — {rows[0][0].lower()}: {pct(rows[0][1], total)} усіх витрат."
+    # Два слайди однієї картки (scroll-snap): 1 — сума і список, 2 — кільце із сумою в центрі. Сума видна один раз.
     return f"""
-<section class="sec spend"><div class="sechead"><h2>Куди йдуть гроші</h2><button type="button" class="slidetoggle">Діаграма</button></div>
+<section class="card spend"><div class="cardhead"><h2>Куди йдуть гроші</h2><button type="button" class="slidetoggle">Діаграма</button></div>
 <div class="slides" tabindex="0" aria-label="Витрати: список і діаграма, стрілки вліво і вправо перемикають">
-<div class="slide"><div class="hero">{zl_html(total)}</div><p class="lede">{hero_sentence(d, key, view, rows, partial)}</p>
-<ul class="cats">{items}</ul>
+<div class="slide"><div class="hero">{zl_html(total)}</div><div class="sub">витрачено за місяць {delta_chip(d, key, view, total, partial)}</div>
+<div class="chart">{bars}</div>
+<p class="verdict">{verdict}</p>
 <details><summary>Показати таблицею</summary>
 <table><tr><th>Категорія</th><th>Сума</th><th>Частка</th></tr>{table}</table></details></div>
 <div class="slide">{donut(rows, total)}<ul class="dlegend">{legend}</ul></div>
@@ -251,15 +248,20 @@ def stacked(parts):
 
 def block_savings(d, key, view, partial, private=False):
     if private:
-        return empty("Скільки відкладено", say("private_money", view=view))
+        return empty("Скільки відкладено", LOCK, f"Доходи й заощадження {view} бачить лише {view}.")
     s = d["savings"][key, view]
     income, spent, saved = s["income"], s["spent"], s["saved"]
     if not income:
-        return empty("Скільки відкладено", say("no_income"))
-    lede = say("saved", saved=zl(saved, 0), income=zl(income, 0)) + (" " + say("saved_partial") if partial else "")
+        return empty("Скільки відкладено", SECTIONS[1][2],
+                     f"Доходу за цей місяць у даних ще немає. Витрачено {zl(spent, 0)}. Норму заощаджень порахуємо, коли надійде зарплата.")
+    rate = pct(saved, income, 1)
+    warn = " Місяць ще не закінчився, тому норма завищена." if partial else ""
+    bar = stacked([("Відкладено", saved, "a"), ("Витрати", spent, "b")]) if saved > 0 else ""
     return f"""
 <section class="card"><h2>Скільки відкладено</h2>
-{ring(saved / income * 100, pct(saved, income), saved < 0)}<p class="lede">{lede}</p></section>"""
+{ring(saved / income * 100, rate, saved < 0)}<div class="sub center">доходу відкладено ({zl(income, 0)} − {zl(spent, 0)})</div>
+{bar}
+<p class="verdict">Відкладено {zl(saved, 0)} із {zl(income, 0)}.{warn}</p></section>"""
 
 
 def block_fixed(d, key, view):
@@ -273,9 +275,10 @@ def block_fixed(d, key, view):
         )
         by_person = f'<table class="people"><tr><th>Змінні витрати</th><th>Сума</th></tr>{rows}</table>'
     return f"""
-<section class="sec"><h2>Фіксовані й змінні</h2>
-<div class="hero mid">{pct(fixed, total)}</div><p class="lede">Стільки витрат — фіксовані: {zl(fixed, 0)} з {zl(total, 0)}. {say("managed", managed=zl(managed))}</p>
-{stacked([("Змінні", managed, "a"), ("Фіксовані", fixed, "b")])}{by_person}</section>"""
+<section class="card"><h2>Фіксовані й змінні</h2>
+<div class="hero">{pct(fixed, total)}</div><div class="sub">витрат — фіксовані ({zl(fixed, 0)})</div>
+{stacked([("Змінні", managed, "a"), ("Фіксовані", fixed, "b")])}
+<p class="verdict">Змінних витрат, якими можна керувати, — {zl(managed)}.</p>{by_person}</section>"""
 
 
 def limit_rows(d, key, view, viewer, limits):
@@ -300,70 +303,37 @@ def level(spent, limit):
 
 
 def limits_banner(rows):
-    """Смуга на всю ширину: одна конкретна фраза і плашки; дотик відкриває вкладку «Ліміти»."""
-    hot = [(n, sp, l) for n, sp, l in rows if level(sp, l)[0] != "fine"]
-    if not hot:
-        return ""
-    def phrase(n, sp, l):
-        return say("over", category=n, over=zl(sp - l, 0)) if sp > l else say("near", category=n, left=zl(l - sp, 0))
-    title = phrase(*hot[0]) if len(hot) == 1 else say("several")
+    """Заголовок і рядок плашок, що гортається вбік; дотик відкриває вкладку «Ліміти»."""
     chips = "".join(
-        f'<span class="achip {level(sp, l)[0]}">{escape(n)} <b>{f"+{zl(sp - l, 0)}" if sp > l else pct(sp, l)}</b></span>'
-        for n, sp, l in hot
-    ) if len(hot) > 1 else ""
-    return (f'<div class="band alert" role="alert"><button type="button" class="atitle">{escape(title)} <span aria-hidden="true">›</span></button>'
-            + (f'<div class="achips">{chips}</div>' if chips else "") + "</div>")
+        f'<span class="achip {level(s, l)[0]}">{escape(n)} <b>{f"+{zl(s - l, 0)}" if s > l else pct(s, l)}</b></span>'
+        for n, s, l in rows if level(s, l)[0] != "fine"
+    )
+    if not chips:
+        return ""
+    return (f'<div class="alert" role="alert"><button type="button" class="atitle">Увага, ліміти <span aria-hidden="true">›</span></button>'
+            f'<div class="achips">{chips}</div></div>')
 
 
+GAUGE = '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>'
+LOCK = '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'
 STATE = {"fine": "В нормі", "near": "Близько", "over": "Перевищено"}
-# Мала гора з пунктирною тропою і прапорцем — спрощений знак trajet-zigzag з logo/.
-PEAK = ('<svg class="peak" viewBox="0 0 64 48" aria-hidden="true"><path class="hill" d="M2 46 L30 6 L38 14 L62 46 Z"/>'
-        '<path class="path" d="M14 44 C24 40 34 38 26 32 S 22 22 30 18 S 34 10 30 8"/><circle cx="14" cy="44" r="2.5"/>'
-        '<path class="flag" d="M30 8 V1 l6 2.2 -6 2.2"/></svg>')
 
 
-def empty(title, text, action=""):
-    """Порожній або приватний стан: гірка з тропою, одне речення і дія, якщо є."""
-    return f'<section class="sec empty"><h2>{title}</h2><div class="emptybody">{PEAK}<div><p>{text}</p>{action}</div></div></section>'
-
-
-# Тропа на гору для ліміту: вершина — ліміт. Точки схилу в координатах viewBox 0 -10 300 44.
-CLIMB = [(4, 32), (70, 28), (130, 21), (190, 12), (240, 3)]
-
-
-def climb_point(frac):
-    """Точка на тропі, що пройдена на frac (0..1) довжини."""
-    seg = [(a, b, math.dist(a, b)) for a, b in zip(CLIMB, CLIMB[1:])]
-    left = frac * sum(l for *_, l in seg)
-    for (x1, y1), (x2, y2), l in seg:
-        if left <= l:
-            return x1 + (x2 - x1) * left / l, y1 + (y2 - y1) * left / l
-        left -= l
-    return CLIMB[-1]
-
-
-def climb(spent, limit, today=None):
-    """SVG: силует гори, пунктирна тропа, пройдена частина кольором стану, прапорець на вершині, риска «сьогодні»."""
-    frac = min(float(spent / limit), 1) if limit else 1
-    path = " ".join(f"{x},{y}" for x, y in CLIMB)
-    mark = ""
-    if today is not None:
-        x, y = climb_point(today)
-        mark = f'<path class="now" d="M{x:.1f} {y - 6:.1f} V{y + 6:.1f}"/>'
-    return (f'<svg class="climb" viewBox="0 -10 300 44" aria-hidden="true">'
-            f'<path class="hill" d="M0 34 L70 30 L130 23 L190 14 L240 4 L262 16 L300 34 Z"/>'
-            f'<polyline class="trail" points="{path}"/><polyline class="done" points="{path}" pathLength="100" stroke-dasharray="{frac * 100:.1f} 100"/>'
-            f'<path class="flag" d="M240 3 V-9 l9 3.2 -9 3.2"/>{mark}</svg>')
+def empty(title, svg, text, action=""):
+    """Порожня картка: іконка, одне речення і дія, якщо є."""
+    return (f'<section class="card empty"><h2>{title}</h2><svg viewBox="0 0 24 24" aria-hidden="true">{svg}</svg>'
+            f'<p>{text}</p>{action}</section>')
 
 
 def block_limits(rows, view, viewer, settings_url, last=None):
     """last — остання дата даних неповного місяця: тоді показуємо позначку «сьогодні» і скільки можна на день."""
     if viewer and view not in ("Разом", viewer):
-        return empty("Ліміти", say("private_limits", view=view))
+        return empty("Ліміти", LOCK, f"Ліміти {view} бачить лише {view}.")
     if not rows:
         action = f'<a class="btn" href="{settings_url}">Задати ліміт</a>' if settings_url else ""
-        return empty("Ліміти", say("empty_limits"), action)
+        return empty("Ліміти", GAUGE, "Лімітів ще немає.", action)
     days = calendar.monthrange(last.year, last.month)[1] if last else 0
+    tick = f'<i class="today" style="left:{last.day / days * 100:.1f}%" title="сьогодні"></i>' if last else ""
     items = []
     for n, spent, limit in rows:
         state = level(spent, limit)[0]
@@ -376,11 +346,11 @@ def block_limits(rows, view, viewer, settings_url, last=None):
         items.append(
             f'<div class="limit {state}"><div class="lhead"><span>{escape(n)} <span class="lchip">{STATE[state]}</span></span>'
             f'<span>{zl(spent, 0)} з {zl(limit, 0)}</span></div>'
-            f'{climb(spent, limit, last.day / days if last else None)}'
+            f'<span class="ltrack"><span class="lbar" style="width:{min(spent / limit * 100, 100) if limit else 100:.1f}%"></span>{tick}</span>'
             f'<small>{note}</small></div>'
         )
     link = f'<p class="foot"><a href="{settings_url}">Налаштувати ліміти</a></p>' if settings_url else ""
-    return f'<section class="sec"><h2>Ліміти на місяць</h2>{"".join(items)}{link}</section>'
+    return f'<section class="card"><h2>Ліміти на місяць</h2>{"".join(items)}{link}</section>'
 
 
 def block_cash(d, key, view):
@@ -388,171 +358,128 @@ def block_cash(d, key, view):
     if not rows:
         return ""
     items = "".join(
-        f"<li><span>{escape(r['narration'])}<small>{r['date'].day} {MONTH_GEN[r['date'].month]} · "
-        f"{escape(category_name(r['category']))} · {escape(r['person'])}</small></span><b>{zl(r['number'])}</b></li>"
+        f"<tr><td>{r['date'].day} {MONTH_GEN[r['date'].month]}</td><td>{escape(r['person'])}</td>"
+        f"<td>{escape(r['narration'])}<br><small>{escape(category_name(r['category']))}</small></td>"
+        f"<td>{zl(r['number'])}</td></tr>"
         for r in rows
     )
-    return f'<section class="sec"><h2>Готівка з телефону</h2><ul class="cash">{items}</ul></section>'
+    return f"""
+<section class="card"><h2>Готівка, додана з телефону</h2>
+<table class="cash">{items}</table></section>"""
 
 
 CSS = """
-/* Trajet: тепла біла основа, один акцент, тонкі лінії замість карток. Кольори — палітра логотипа (logo/palette-prompt-en.md).
-   Лише 3 радіуси (--r-s/--r-m/--r-full), 1 тінь (--lift), 3 кольори тексту (--text, --text-muted, --on-accent). */
+/* Розкладка — Boro UI зі Stitch; кольори — палітра логотипа Trajet (крижана гора). Усі кольори лише тут. */
 :root {
   --bg:#e9eff3; --surface:#fff; --border:#d0dced; --text:#1e3550;
   --text-muted:#4f6277; /* у палітрі #53677D; на 2% темніше, щоб на тлі полів (--border) був контраст 4.5:1 */
   --accent:#739bbf; --accent-strong:#2b4c70; --on-accent:#fff;
   --positive:#2f7a59; --negative:#c2534b; --warning:#946a1e;
+  --warning-soft:color-mix(in srgb, var(--warning) 12%, var(--surface)); --negative-soft:color-mix(in srgb, var(--negative) 12%, var(--surface));
   --cat1:#1e3550; --cat2:#739bbf; --cat3:#a9c1da; --cat4:#4a6f94; --cat5:#d0dced; --cat6:#2b4c70; --cat7:#8fb0cf; --cat8:#53677d;
-  --base:color-mix(in srgb, var(--surface) 96%, var(--warning)); /* тепла біла основа */
-  --ice:var(--bg); /* крижане тло — лише для однієї картки і смуги на всю ширину */
-  --soft:color-mix(in srgb, var(--border) 50%, var(--base));
-  --r-s:8px; --r-m:16px; --r-full:999px;
-  --lift:0 6px 20px color-mix(in srgb, var(--text) 18%, transparent);
-  --font-text:Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; --font-display:var(--font-text);
 }
 * { box-sizing:border-box; }
-body { margin:0; background:var(--base); color:var(--text); font:400 16px/1.5 var(--font-text); -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; }
-main { max-width:720px; margin:0 auto; padding:0 24px calc(120px + env(safe-area-inset-bottom, 0px)); padding-top:env(safe-area-inset-top, 0); }
-header { display:flex; align-items:center; gap:12px; padding:18px 0 8px; }
-h1, h2, .hero, .ring b, .donut b { font-family:var(--font-display); font-variant-numeric:lining-nums tabular-nums; }
-h1 { margin:0; flex:1; font-size:1.35rem; font-weight:600; letter-spacing:-.01em; }
-h2 { margin:0 0 12px; font-size:1.2rem; font-weight:600; }
-b, strong, th { font-weight:600; }
-a { color:var(--text); text-decoration-color:var(--accent); text-decoration-thickness:2px; text-underline-offset:4px; }
-small { color:var(--text-muted); }
-:focus-visible { outline:2px solid var(--accent-strong); outline-offset:2px; }
+body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; } /* суми однакової ширини цифр */
+main { max-width:720px; margin:0 auto; padding:0 24px calc(160px + env(safe-area-inset-bottom, 0px)); /* кінець сторінки не ховається під «+» (84 + 60 + 16) */ padding-top:env(safe-area-inset-top, 0); }
+header { display:flex; align-items:center; gap:12px; margin:0 -24px; padding:14px 24px; border-bottom:1px solid var(--border); }
+h1 { margin:0; flex:1; font-size:1.25rem; font-weight:600; letter-spacing:-.01em; }
 .nav { display:flex; gap:8px; align-items:center; }
-.btn { display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:0 22px; border:0; border-radius:var(--r-full); background:var(--accent-strong); color:var(--on-accent); font:600 1rem var(--font-text); text-decoration:none; cursor:pointer; }
-.btn.ghost { min-height:44px; background:none; color:var(--text); border:1px solid var(--text-muted); }
-
-/* Перемикачі: люди — сегменти, місяці — горизонтальна стрічка */
-.sticky { position:sticky; top:0; z-index:1; background:var(--base); padding:8px 0 0; }
+.btn { font:inherit; font-size:1rem; font-weight:600; border:0; border-radius:999px; padding:10px 20px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; background:var(--accent-strong); color:var(--on-accent); text-decoration:none; cursor:pointer; }
+.btn.ghost { background:var(--border); color:var(--text); }
+.sticky { position:sticky; top:0; z-index:1; background:var(--bg); padding:12px 0 4px; }
 .tabs { display:flex; }
-#people { padding:4px; border-radius:var(--r-full); background:var(--soft); }
-#people button { flex:1; min-height:44px; border:0; border-radius:var(--r-full); background:none; color:var(--text); font:inherit; cursor:pointer; }
+#people { background:var(--border); border-radius:999px; padding:4px; }
+#people button { flex:1; min-height:44px; font:inherit; font-size:.95rem; color:var(--text); background:none; border:0; border-radius:999px; cursor:pointer; }
 #people button[aria-selected="true"] { background:var(--accent-strong); color:var(--on-accent); font-weight:600; }
-#months { gap:4px; margin:6px -24px 0; padding:0 24px; overflow-x:auto; scrollbar-width:none; border-bottom:1px solid var(--border); }
-#months::-webkit-scrollbar { display:none; }
-#months button { flex:none; min-height:44px; padding:0 12px; border:0; border-bottom:2px solid transparent; background:none; color:var(--text-muted); font:inherit; cursor:pointer; }
-#months button[aria-selected="true"] { color:var(--text); font-weight:600; border-bottom-color:var(--text); }
-.caption { margin:14px 0 0; color:var(--text-muted); font-size:.9rem; }
-
-/* Розділи: звичайні блоки з тонкою лінією; залита лише .card, на всю ширину — лише .band */
-.sec { padding:24px 0 8px; }
-/* Роздільник — тропа з логотипа (точка, серпантин, прапорець), далі тонка лінія. Маска, щоб колір був зі змінної. */
-.sec + .sec::before { content:""; display:block; height:16px; margin-bottom:20px; background:var(--accent);
-  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 16'%3E%3Ccircle cx='3' cy='12' r='2.5'/%3E%3Cpath d='M3 12 C15 12 18 4 30 4 S46 12 58 12 S74 5 84 5' fill='none' stroke='%23000' stroke-width='1.6' stroke-dasharray='3 3' stroke-linecap='round'/%3E%3Cpath d='M86 14 V2 l7 2.4 -7 2.4'/%3E%3C/svg%3E") 0 50% / 96px 16px no-repeat, linear-gradient(#000, #000) 104px 50% / calc(100% - 104px) 1px no-repeat;
-  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 16'%3E%3Ccircle cx='3' cy='12' r='2.5'/%3E%3Cpath d='M3 12 C15 12 18 4 30 4 S46 12 58 12 S74 5 84 5' fill='none' stroke='%23000' stroke-width='1.6' stroke-dasharray='3 3' stroke-linecap='round'/%3E%3Cpath d='M86 14 V2 l7 2.4 -7 2.4'/%3E%3C/svg%3E") 0 50% / 96px 16px no-repeat, linear-gradient(#000, #000) 104px 50% / calc(100% - 104px) 1px no-repeat; }
-.sec + .sec { padding-top:16px; }
-.sechead { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:4px; } .sechead h2 { margin:0; }
-.card { margin:24px 0; padding:20px; border-radius:var(--r-m); background:var(--ice); }
-.band { margin:12px -24px 0; padding:12px 24px 14px; background:var(--ice); cursor:pointer; }
-.hero { margin:8px 0 0; font-size:4.5rem; line-height:1; font-weight:300; letter-spacing:-.035em; }
-.hero.mid { font-size:3rem; }
-.cur { margin-left:.12em; font:400 .32em var(--font-text); color:var(--text-muted); letter-spacing:0; }
-.lede { margin:10px 0 0; max-width:32ch; color:var(--text-muted); }
-
-/* Категорії: точка, назва, частка, сума; смуга лише в трьох найбільших */
-.cats { list-style:none; margin:20px 0 0; padding:0; }
-.cat { display:grid; grid-template-columns:auto 1fr auto 5.5em; align-items:baseline; column-gap:10px; padding:10px 0; border-top:1px solid var(--border); }
-.cat:first-child { border-top:0; }
-.dot { display:inline-block; width:8px; height:8px; border-radius:var(--r-full); background:var(--c, var(--accent)); }
-.faded .dot { opacity:.6; } /* понад 8 категорій — ті самі кольори, але прозоріші */
-.cat .dot { align-self:center; }
-.cat .name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.share { color:var(--text-muted); font-size:.85rem; }
-.val { text-align:right; white-space:nowrap; } .cat.top .val { font-weight:600; }
-.track { grid-column:2 / -1; display:block; height:4px; margin-top:8px; border-radius:var(--r-full); background:var(--soft); overflow:hidden; }
-.bar { display:block; height:100%; border-radius:var(--r-full); background:var(--c, var(--accent)); transform-origin:left; animation:grow .4s ease-out; }
-
-/* Слайди «список / діаграма» */
-.slidetoggle { min-height:44px; padding:0 2px; border:0; background:none; color:var(--text); font:inherit; text-decoration:underline; text-decoration-color:var(--accent); text-decoration-thickness:2px; text-underline-offset:4px; cursor:pointer; }
-.slides { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none; }
-.slides::-webkit-scrollbar { display:none; } .slides:focus-visible { border-radius:var(--r-s); }
-.slide { flex:0 0 100%; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; }
-.donut { position:relative; width:min(320px, 100%); aspect-ratio:1; margin:16px auto 20px; } /* удвічі від 160 px, але не ширше картки */
-.donut svg { display:block; width:100%; height:100%; } .donut circle { fill:none; stroke-width:18; animation:draw .4s ease-out; }
-.donut div { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-.donut b { font-size:2.5rem; font-weight:300; letter-spacing:-.03em; } .donut small { font-size:1rem; }
-.dlegend { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:.9rem; }
-.dlegend li { display:flex; align-items:center; gap:8px; min-width:0; } .dlegend b { margin-left:auto; }
-.dots { display:flex; gap:4px; margin:4px 0 0 -14px; }
-.dots button { display:grid; place-items:center; width:44px; height:44px; padding:0; border:0; background:none; cursor:pointer; }
-.dots button::before { content:""; width:8px; height:8px; border-radius:var(--r-full); background:var(--border); } .dots button[aria-current="true"]::before { background:var(--accent-strong); }
-.swipehint { margin:0; color:var(--text-muted); font-size:.85rem; }
-details { margin-top:8px; color:var(--text-muted); } summary { cursor:pointer; padding:10px 0; }
-table { width:100%; border-collapse:collapse; margin-top:8px; } td, th { padding:10px 4px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
-th { font-size:.9rem; color:var(--text-muted); } td:last-child, th:last-child { text-align:right; white-space:nowrap; }
-
-/* Заощадження і фіксовані */
-.ring { position:relative; width:150px; height:150px; margin:8px 0; }
-.ring svg { width:100%; height:100%; } .ring circle { fill:none; stroke-width:12; } .rtrack { stroke:var(--surface); }
-.rarc { stroke:var(--accent-strong); stroke-linecap:round; animation:draw .4s ease-out; } .ring.neg .rarc { stroke:var(--text); }
-.ring div { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-.ring b { font-size:2.4rem; font-weight:300; letter-spacing:-.03em; line-height:1; } .ring small { font-size:.85rem; }
-.stack { display:flex; gap:2px; height:10px; margin-top:20px; }
-.seg { min-width:2px; } .seg:first-child { border-radius:var(--r-full) 0 0 var(--r-full); } .seg:last-child { border-radius:0 var(--r-full) var(--r-full) 0; }
-.a { background:var(--cat1); } .b { background:var(--cat2); }
-.legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; font-size:.9rem; color:var(--text-muted); }
-.sw { display:inline-block; width:8px; height:8px; border-radius:var(--r-full); margin-right:6px; } .legend b { color:var(--text); }
-
-/* Ліміти: червоний / жовтий / зелений — лише тут */
-.limit { padding:14px 0; border-top:1px solid var(--border); } .limit:first-of-type { border-top:0; }
-.fine { --state:var(--positive); } .near { --state:var(--warning); } .over { --state:var(--negative); }
-.lhead { display:flex; justify-content:space-between; align-items:baseline; gap:8px; } .lhead > span:last-child { font-weight:600; white-space:nowrap; }
-.lchip { margin-left:6px; color:var(--text-muted); font-size:.85rem; white-space:nowrap; }
-.lchip::before { content:""; display:inline-block; width:8px; height:8px; margin-right:5px; border-radius:var(--r-full); background:var(--state); }
-.climb { display:block; width:100%; height:auto; margin:6px 0 2px; overflow:visible; }
-.climb .hill { fill:var(--soft); } .climb polyline { fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
-.climb .trail { stroke:var(--text-muted); stroke-width:1.5; stroke-dasharray:4 4; } .climb .done { stroke:var(--state); animation:draw .4s ease-out; }
-.climb .flag { fill:var(--state); stroke:var(--text); stroke-width:1.2; stroke-linejoin:round; } .climb .now { stroke:var(--text); stroke-width:2; }
-.achips { display:flex; gap:8px; margin-top:8px; overflow-x:auto; white-space:nowrap; scrollbar-width:none; } .achips::-webkit-scrollbar { display:none; }
-.achip { flex:none; padding:6px 12px; border-radius:var(--r-full); background:var(--base); font-size:.9rem; }
-.achip::before { content:""; display:inline-block; width:8px; height:8px; margin-right:6px; border-radius:var(--r-full); background:var(--state); }
-.atitle { display:block; width:100%; min-height:44px; padding:0; border:0; background:none; color:var(--text); font:inherit; text-align:left; cursor:pointer; }
-
-/* Порожні стани: гірка з тропою */
-.emptybody { display:flex; gap:16px; align-items:flex-start; } .emptybody p { margin:4px 0 12px; max-width:28ch; }
-.peak { flex:none; width:64px; height:48px; overflow:visible; }
-.peak .hill { fill:var(--ice); } .peak .path { fill:none; stroke:var(--text); stroke-width:1.6; stroke-dasharray:3 3; stroke-linecap:round; }
-.peak circle { fill:var(--text); } .peak .flag { fill:var(--accent-strong); stroke:var(--text); stroke-width:1.2; stroke-linejoin:round; }
-
-/* Готівка */
-.cash { list-style:none; margin:0; padding:0; }
-.cash li { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:10px 0; border-top:1px solid var(--border); } .cash li:first-child { border-top:0; }
-.cash small { display:block; }
-
-/* Нижнє меню, «+», меню в шапці, повідомлення */
-.tabbar { position:fixed; z-index:1; left:0; right:0; bottom:0; display:flex; justify-content:center; padding:0 8px env(safe-area-inset-bottom, 0px); background:var(--surface); border-top:1px solid var(--border); }
-.tabbar button { flex:1; max-width:180px; min-height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; border:0; border-top:2px solid transparent; background:none; color:var(--text-muted); font:inherit; font-size:.72rem; cursor:pointer; }
-.tabbar button[aria-selected="true"] { color:var(--text); font-weight:600; border-top-color:var(--accent-strong); }
-.tabbar svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
-/* «+» — по центру нижнього меню, над ним; суми праворуч, тож кнопка їх не закриває */
-.fab { position:fixed; z-index:2; left:calc(50% - 32px); bottom:calc(18px + env(safe-area-inset-bottom, 0px)); width:64px; height:64px; border-radius:var(--r-full); display:flex; align-items:center; justify-content:center; background:var(--accent-strong); color:var(--on-accent); text-decoration:none; box-shadow:var(--lift); }
-.fab svg { width:28px; height:28px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; }
-.tabbar.has-fab button:nth-child(2) { margin-right:80px; }
-.menu { position:relative; } .menu summary::-webkit-details-marker { display:none; }
-.menu summary { list-style:none; display:flex; align-items:center; min-height:44px; padding:0 16px; border:1px solid var(--text-muted); border-radius:var(--r-full); font-weight:600; cursor:pointer; }
-.menu-list { position:absolute; right:0; top:calc(100% + 8px); z-index:3; min-width:210px; display:flex; flex-direction:column; padding:6px; background:var(--surface); border-radius:var(--r-m); box-shadow:var(--lift); }
-.menu-list a, .menu-list button { display:flex; align-items:center; width:100%; min-height:48px; padding:0 14px; border:0; border-radius:var(--r-s); background:none; color:var(--text); font:inherit; text-align:left; text-decoration:none; cursor:pointer; }
-.menu-list a:hover, .menu-list button:hover { background:var(--soft); } .menu-list form { margin:0; }
-.flash { display:flex; align-items:center; gap:10px; position:fixed; z-index:3; left:24px; right:24px; bottom:calc(96px + env(safe-area-inset-bottom, 0px)); max-width:672px; margin:0 auto; padding:14px 18px; border-radius:var(--r-m); background:var(--text); color:var(--on-accent); box-shadow:var(--lift); animation:toast 5s forwards; }
-.tick { flex:none; width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:24; animation:tickdraw .4s .1s ease-out backwards; }
-@keyframes tickdraw { from { stroke-dashoffset:24; } }
+#months { justify-content:center; gap:4px; margin-top:4px; }
+#months button { min-height:44px; padding:0 12px; font:inherit; font-size:.95rem; font-weight:500; color:var(--text-muted); background:none; border:0; border-bottom:2px solid transparent; cursor:pointer; }
+#months button[aria-selected="true"] { color:var(--text); font-weight:600; border-bottom-color:var(--accent); }
+.caption { color:var(--text-muted); margin:20px 0 8px; font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
+.caption.partial { background:var(--warning-soft); border-radius:999px; padding:8px 14px; color:var(--text); }
+.flash { position:fixed; z-index:2; left:24px; right:24px; bottom:calc(96px + env(safe-area-inset-bottom, 0px)); max-width:672px; margin:0 auto; background:var(--accent-strong); color:var(--on-accent); border-radius:999px; padding:14px 20px; animation:toast 5s forwards; }
 @keyframes toast { 0%, 85% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
-.month[hidden] { display:none; }
-.foot { color:var(--text-muted); font-size:.85rem; }
-.foot a { display:inline-flex; align-items:center; min-height:44px; font-size:1rem; } /* посилання «Налаштувати ліміти» — ціль ≥ 44 px */
-
-/* Рух: розділ з'являється знизу, смуги й кільця ростуть, коли розділ показано; натискання трохи стискає */
+.alert { background:var(--surface); border:1px solid color-mix(in srgb, var(--warning) 40%, var(--surface)); border-radius:24px; padding:12px 16px; margin:16px 0 0; cursor:pointer; }
+.atitle { display:block; width:100%; min-height:32px; padding:0; border:0; background:none; font:inherit; font-weight:600; color:var(--text); text-align:left; cursor:pointer; }
+.achips { display:flex; gap:8px; margin-top:6px; overflow-x:auto; white-space:nowrap; scrollbar-width:none; } .achips::-webkit-scrollbar { display:none; }
+.achip { flex:none; padding:6px 12px; border-radius:999px; font-size:.85rem; } .achip.over { background:var(--negative-soft); } .achip.near { background:var(--warning-soft); }
+.tabbar { position:fixed; z-index:1; left:0; right:0; bottom:0; display:flex; justify-content:center; padding:6px 8px env(safe-area-inset-bottom, 0px); background:var(--surface); border:1px solid var(--border); border-bottom:0; border-radius:28px 28px 0 0; }
+.tabbar button { flex:1; max-width:180px; min-height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font:inherit; font-size:.7rem; color:var(--text-muted); background:none; border:0; cursor:pointer; }
+.tabbar button[aria-selected="true"] { color:var(--accent-strong); font-weight:600; } .tabbar button[aria-selected="true"] svg { stroke:var(--accent); }
+.tabbar svg { width:26px; height:26px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.fab { position:fixed; z-index:1; right:max(24px, calc(50% - 336px)); bottom:calc(84px + env(safe-area-inset-bottom, 0px)); width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--accent-strong); color:var(--on-accent); font-size:2rem; font-weight:300; text-decoration:none; }
+.menu { position:relative; } .menu summary::-webkit-details-marker { display:none; }
+.menu summary { list-style:none; display:flex; align-items:center; min-height:44px; padding:0 16px; border:1.5px solid var(--text); border-radius:999px; font-weight:600; cursor:pointer; }
+.menu-list { position:absolute; right:0; top:calc(100% + 8px); z-index:3; min-width:210px; display:flex; flex-direction:column; padding:6px; background:var(--surface); border:1px solid var(--border); border-radius:24px; }
+.menu-list a, .menu-list button { display:flex; align-items:center; width:100%; min-height:48px; padding:0 16px; border:0; border-radius:18px; background:none; color:var(--text); font:inherit; text-align:left; text-decoration:none; cursor:pointer; }
+.menu-list a:hover, .menu-list button:hover { background:var(--border); } .menu-list form { margin:0; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:24px; margin:16px 0; }
+h2 { margin:0 0 12px; font-size:.75rem; color:var(--text-muted); font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
+.cur { font-size:.5em; font-weight:500; color:var(--text-muted); margin-left:.15em; letter-spacing:0; }
+.ring { position:relative; width:140px; height:140px; margin:4px auto 8px; }
+.ring svg { width:100%; height:100%; } .ring circle { fill:none; stroke-width:14; } .rtrack { stroke:var(--border); }
+.rarc { stroke:var(--accent); stroke-linecap:round; animation:draw .4s ease-out; } .ring.neg .rarc { stroke:var(--negative); }
+@keyframes draw { from { stroke-dasharray:0 999; } }
+.ring div { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.ring b { font-size:2rem; font-weight:600; letter-spacing:-.02em; line-height:1.1; } .ring small { font-size:.8rem; }
+.sub.center { text-align:center; }
+.chip { display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding:3px 10px; border-radius:999px; font-size:.8rem; font-weight:600; color:var(--text); white-space:nowrap; }
+.chip.bad { background:var(--negative-soft); } .chip.info { background:var(--warning-soft); font-weight:500; } .chip.good { background:color-mix(in srgb, var(--positive) 14%, var(--surface)); }
+.hero { font-size:3.5rem; line-height:1.1; font-weight:600; letter-spacing:-.03em; } .sub { color:var(--text-muted); margin:4px 0 20px; }
+.donut { position:relative; width:min(320px, 100%); aspect-ratio:1; margin:8px auto 20px; } /* удвічі від 160 px, але не ширше картки */
+.donut svg { display:block; width:100%; height:100%; } .donut circle { fill:none; stroke-width:18; }
+.donut div { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.donut b { font-size:2.5rem; font-weight:600; letter-spacing:-.03em; } .donut small { font-size:1rem; }
+.row { display:grid; grid-template-columns:36px 1fr auto; grid-template-areas:"ico name val" "ico meta meta"; column-gap:12px; row-gap:2px; align-items:center; min-height:48px; padding:6px 0; }
+.ico { grid-area:ico; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:color-mix(in srgb, var(--c) 18%, var(--surface)); color:var(--text); font-weight:600; }
+.ico svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.name { grid-area:name; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .val { grid-area:val; text-align:right; font-weight:600; white-space:nowrap; }
+.meta { grid-area:meta; display:flex; align-items:center; gap:8px; } .meta small { min-width:2.6em; font-size:.8rem; }
+.track { flex:1; height:6px; background:color-mix(in srgb, var(--border) 40%, var(--surface)); /* світліше за --cat5, щоб її смугу було видно */ border-radius:3px; overflow:hidden; } .bar { display:block; height:100%; background:var(--c, var(--accent)); border-radius:3px; }
+.row:nth-child(8n+1) { --c:var(--cat1); } .row:nth-child(8n+2) { --c:var(--cat2); } .row:nth-child(8n+3) { --c:var(--cat3); } .row:nth-child(8n+4) { --c:var(--cat4); } .row:nth-child(8n+5) { --c:var(--cat5); } .row:nth-child(8n+6) { --c:var(--cat6); } .row:nth-child(8n+7) { --c:var(--cat7); } .row:nth-child(8n+0) { --c:var(--cat8); }
+.row:nth-child(n+9) .bar { opacity:.6; } /* понад 8 категорій — ті самі кольори, але прозоріші */
+.stack { display:flex; gap:2px; height:14px; }
+.seg { min-width:2px; } .seg:first-child { border-radius:7px 0 0 7px; } .seg:last-child { border-radius:0 7px 7px 0; }
+.a { background:var(--cat1); } .b { background:var(--cat2); }
+.legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-size:.9rem; color:var(--text-muted); }
+.sw { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; } .legend b { color:var(--text); font-weight:600; }
+.limit { padding:14px 0; border-bottom:1px solid var(--border); } .limit:last-of-type { border-bottom:0; }
+.lhead { display:flex; justify-content:space-between; align-items:center; gap:8px; } .lhead > span:last-child { font-weight:600; white-space:nowrap; }
+.lchip { display:inline-block; margin-left:4px; padding:1px 8px; border-radius:999px; font-size:.72rem; font-weight:600; vertical-align:1px; }
+.fine .lchip { background:color-mix(in srgb, var(--positive) 14%, var(--surface)); } .near .lchip { background:var(--warning-soft); } .over .lchip { background:var(--negative-soft); }
+.ltrack { position:relative; display:block; height:10px; background:var(--border); border-radius:5px; margin:8px 0 4px; }
+.today { position:absolute; top:-3px; width:2px; height:16px; margin-left:-1px; background:var(--text); border-radius:1px; }
+.lbar { display:block; height:100%; border-radius:5px; transform-origin:left; animation:grow .4s ease-out; }
+@keyframes grow { from { transform:scaleX(0); } }
+.empty { text-align:center; } .empty h2 { text-align:left; } .empty > svg { width:40px; height:40px; margin:8px auto 0; fill:none; stroke:var(--accent); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; } .empty p { margin:8px 0 16px; }
+/* Рух: розділ з'являється знизу, смуги й кільця ростуть, коли розділ показано (анімація стартує з display:none заново). */
 .month [data-s]:not([hidden]) { animation:rise .18s ease-out; }
 @keyframes rise { from { opacity:0; transform:translateY(6px); } }
-@keyframes grow { from { transform:scaleX(0); } }
-@keyframes draw { from { stroke-dasharray:0 999; } }
-.btn, .tabs button, .fab, .tabbar button, .alert, .slidetoggle { transition:transform .1s ease-out; }
-.btn:active, .tabs button:active, .fab:active, .tabbar button:active, .alert:active, .slidetoggle:active { transform:scale(.97); }
+.bar { transform-origin:left; animation:grow .4s ease-out; } .donut circle { animation:draw .4s ease-out; }
+.btn:active, .tabs button:active, .fab:active, .tabbar button:active, .alert:active { transform:scale(.98); }
+.cardhead { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; } .cardhead h2 { margin:0; }
+.slidetoggle { min-height:44px; padding:0 14px; border:0; border-radius:999px; background:var(--border); color:var(--text); font:inherit; font-size:.85rem; font-weight:600; cursor:pointer; }
+.slides { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none; }
+.slides::-webkit-scrollbar { display:none; } .slides:focus-visible { outline:2px solid var(--accent); outline-offset:4px; border-radius:12px; }
+.slide { flex:0 0 100%; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; }
+.chart { padding-bottom:76px; } /* «+» (60 px) + 16 px: плаваюча кнопка не закриває суми останніх рядків */
+.dlegend { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:.9rem; }
+.dlegend li { display:flex; align-items:center; gap:6px; min-width:0; } .dlegend b { margin-left:auto; font-weight:600; }
+.dots { display:flex; justify-content:center; gap:4px; margin-top:8px; }
+.dots button { display:grid; place-items:center; width:44px; height:44px; padding:0; border:0; background:none; cursor:pointer; }
+.dots button::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--border); } .dots button[aria-current="true"]::before { background:var(--accent-strong); }
+.swipehint { margin:0; text-align:center; color:var(--text-muted); font-size:.85rem; }
 @media (prefers-reduced-motion: reduce) { *:not(.flash) { animation:none !important; transition:none !important; } }
+.fine .lbar { background:var(--positive); } .near .lbar { background:var(--warning); } .over .lbar { background:var(--negative); }
+.over small { color:var(--negative); font-weight:600; }
+.verdict { margin:16px 0 0; }
+a { color:var(--accent-strong); }
+details { margin-top:12px; color:var(--text-muted); } summary { cursor:pointer; padding:10px 0; }
+table { width:100%; border-collapse:collapse; margin-top:8px; } td, th { padding:12px 6px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
+th { font-size:.75rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--text-muted); }
+td:last-child, th:last-child { text-align:right; white-space:nowrap; }
+small { color:var(--text-muted); }
+.month[hidden] { display:none; }
+.foot { color:var(--text-muted); font-size:.85rem; }
 """
 
 
@@ -590,14 +517,13 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
             note = f" · {scope[v]}" if v in scope else ""
             panels.append(
                 f'<div class="month" data-m="{month_id(k)}" data-p="{v}" hidden>{limits_banner(rows)}'
-                f'<p class="caption{" partial" if partial else ""}">{v} · {MONTH_NAMES[k[1]].lower()} {k[0]} · {cap}{note}</p>'
+                f'<p class="caption{" partial" if partial else ""}">{v} · {MONTH_NAMES[k[1]]} {k[0]} · {cap}{note}</p>'
                 f'<div data-s="spend">{block_categories(d, k, v, partial)}{block_cash(d, k, v)}</div>'
                 f'<div data-s="save" hidden>{block_savings(d, k, v, partial, v == other)}</div>'
                 f'<div data-s="fixed" hidden>{block_fixed(d, k, v)}</div>'
                 f'<div data-s="limits" hidden>{block_limits(rows, v, viewer, settings_url, d["last_day"][k] if partial else None)}</div></div>'
             )
-    tick = '<svg class="tick" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>'
-    flash_html = f'<p class="flash" role="status">{tick}{flash}</p>' if flash else ""
+    flash_html = f'<p class="flash" role="status">{flash}</p>' if flash else ""
     return f"""<!doctype html>
 <html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -610,7 +536,7 @@ def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None
 {''.join(panels)}
 <p class="foot">* місяць ще не закінчився. Дані: виписки Олі й Марка за 1 серпня — 15 жовтня 2026 і готівка, додана з телефону; злоті.</p>
 </main>
-<nav class="tabbar{" has-fab" if nav else ""}" role="tablist" id="sections">{"".join(
+<nav class="tabbar" role="tablist" id="sections">{"".join(
     f'<button role="tab" data-s="{k}" aria-selected="{str(k == "spend").lower()}"><svg viewBox="0 0 24 24" aria-hidden="true">{icon}</svg>{label}</button>'
     for k, label, icon in SECTIONS)}</nav>
 <script>
@@ -654,12 +580,6 @@ st.forEach(t => t.addEventListener('click', () => {{ s = t.dataset.s; show(); sc
 document.addEventListener('click', e => document.querySelectorAll('details.menu[open]').forEach(x => x.contains(e.target) || x.removeAttribute('open')));
 mt.forEach(t => t.addEventListener('click', () => {{ m = t.dataset.m; show(); }}));
 if (document.querySelector('.flash')) navigator.vibrate?.(10);  // відгук після збереження готівки
-// Велика сума один раз «набігає» від нуля (400 мс); без JS чи з «менше руху» — одразу готове число.
-if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('.month:not([hidden]) .hero .num').forEach(el => {{
-  const end = parseFloat(el.dataset.n), t0 = performance.now(), fmt = v => Math.round(v).toString().replace(/\\B(?=(\\d{{3}})+(?!\\d))/g, ' ');
-  const tick = t => {{ const k = Math.min((t - t0) / 400, 1); el.textContent = fmt(end * (1 - (1 - k) ** 3)); if (k < 1) requestAnimationFrame(tick); }};
-  requestAnimationFrame(tick);
-}});
 document.querySelectorAll('.alert').forEach(a => a.addEventListener('click', () => {{ s = 'limits'; show(); scrollTo(0, 0); }}));
 const has = (list, key, v) => [...list].some(t => t.dataset[key] === v);
 try {{ const s = JSON.parse(localStorage.getItem('view') || '{{}}'); if (has(pt, 'p', s.p)) p = s.p; if (has(mt, 'm', s.m)) m = s.m; }} catch (e) {{}}
