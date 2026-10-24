@@ -561,6 +561,7 @@ th { font-size:.9rem; color:var(--text-muted); } td:last-child, th:last-child { 
 @keyframes toast { 0%, 85% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
 .month[hidden] { display:none; }
 .foot { color:var(--text-muted); font-size:.85rem; }
+.foot a { display:inline-flex; align-items:center; min-height:44px; font-size:1rem; } /* посилання «Налаштувати ліміти» — ціль ≥ 44 px */
 
 /* Рух: розділ з'являється знизу, смуги й кільця ростуть, коли розділ показано; натискання трохи стискає */
 .month [data-s]:not([hidden]) { animation:rise .18s ease-out; }
