@@ -1,0 +1,31 @@
+option "title" "Фінанси Олі"
+option "operating_currency" "PLN"
+
+2026-07-31 open Assets:Банк                     PLN
+2026-07-31 open Equity:Початковий-залишок
+
+2026-07-31 open Income:Зарплата                 PLN
+2026-07-31 open Income:Інше                     PLN
+
+2026-07-31 open Expenses:Житло                  PLN
+2026-07-31 open Expenses:Продукти               PLN
+2026-07-31 open Expenses:Кафе                   PLN
+2026-07-31 open Expenses:Доставка-Їжі           PLN
+2026-07-31 open Expenses:Транспорт              PLN
+2026-07-31 open Expenses:Підписки               PLN
+2026-07-31 open Expenses:Мобільний-оператор     PLN
+2026-07-31 open Expenses:Краса-Побут            PLN
+2026-07-31 open Expenses:Спорт                  PLN
+2026-07-31 open Expenses:Без-Категорії          PLN
+
+2026-07-31 * "Початковий залишок на 31 липня 2026"
+  Assets:Банк                    4500.00 PLN
+  Equity:Початковий-залишок
+
+
+2026-07-31 query "витрати-за-категоріями" "SELECT year, month, account, sum(position) AS total WHERE account ~ '^Expenses' GROUP BY year, month, account ORDER BY year, month, total DESC"
+2026-07-31 query "норма-заощаджень" "SELECT year, month, -sum(number * int(root(account, 1) = 'Income')) AS income, sum(number * int(root(account, 1) = 'Expenses')) AS spent, -sum(number) AS saved, round(-sum(number) / -sum(number * int(root(account, 1) = 'Income')) * 100) AS rate_pct, max(date) AS last_day WHERE account ~ '^(Income|Expenses)' GROUP BY year, month ORDER BY year, month"
+2026-07-31 query "фіксовані-і-змінні" "SELECT year, month, 'fixed' IN tags AS fixed, sum(position) AS total WHERE account ~ '^Expenses' GROUP BY year, month, fixed ORDER BY year, month, fixed"
+2026-07-31 query "без-категорії" "SELECT year, month, date, narration, position WHERE account = 'Expenses:Без-Категорії' OR account = 'Income:Інше' ORDER BY date"
+
+include "transactions.beancount"
