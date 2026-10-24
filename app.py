@@ -135,6 +135,9 @@ input[name=amount] {{ font-size:3rem; font-weight:500; letter-spacing:-.04em; pa
 .radios span {{ display:block; text-align:center; padding:10px; min-height:44px; border-radius:999px; cursor:pointer; }}
 .radios input:checked + span {{ background:var(--black); color:#fff; font-weight:600; }}
 .radios input:focus-visible + span {{ outline:2px solid var(--accent); outline-offset:2px; }}
+.lrow {{ display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:56px; border-bottom:1px solid var(--line); color:var(--ink); text-decoration:none; }}
+.lrow:last-child {{ border-bottom:0; }} .lrow b {{ font-weight:600; }} .lrow b::after {{ content:"›"; color:var(--ink2); font-weight:400; margin-left:12px; }}
+.stackbtn {{ display:flex; flex-direction:column; gap:8px; }}
 .btn.wide {{ width:100%; min-height:56px; font-size:1.05rem; }}
 .error {{ background:#ffdad6; color:#93000a; border-radius:16px; padding:12px 16px; }}
 </style></head><body><main>{body}</main></body></html>"""
@@ -284,41 +287,58 @@ def parse_cash(form, accounts, today):
 
 @app.route("/limits", methods=["GET", "POST"])
 def limits():
-    """Ліміти на місяць для своїх категорій. Чужі рядки limits.csv не показуємо і не змінюємо."""
+    """Ліміти на місяць: обираємо одну свою категорію і ставимо їй ліміт. Чужі рядки limits.csv не показуємо і не змінюємо."""
     accounts = expense_accounts()[me()]
+    name = lambda a: report.category_name(a.rsplit(":", 1)[1])
     current = report.load_limits()
-    values = {a: f"{current[a]:f}".replace(".", ",") if a in current else "" for a in accounts}
+    mine = {a: current[a] for a in accounts if a in current}
+    chosen = request.values.get("account", "")
     error = ""
     if request.method == "POST":
         check_csrf()
-        values = {a: request.form.get(a, "").strip() for a in accounts}
+        amount = request.form.get("amount", "").strip()
         try:
-            mine = {}
-            for a, text in values.items():
-                if text:
-                    mine[a] = money(text)
-                    if not Decimal("1") <= mine[a] <= Decimal("1000000"):
-                        raise ValueError("Ліміт має бути від 1 до 1 000 000 зл або порожнім.")
+            if chosen not in accounts:
+                raise ValueError("Оберіть категорію.")
+            if request.form.get("remove"):
+                mine.pop(chosen, None)
+                done = f"{name(chosen)}: ліміт прибрано."
+            else:
+                mine[chosen] = money(amount)
+                if not Decimal("1") <= mine[chosen] <= Decimal("1000000"):
+                    raise ValueError("Ліміт має бути від 1 до 1 000 000 зл.")
+                done = f"{name(chosen)}: ліміт {report.zl(mine[chosen], 0)} на місяць."
         except ValueError as e:
             error = str(e)
         else:
             save_limits(mine)
-            session["added"] = "Ліміти збережено."
-            return redirect(url_for("index"))
-    fields = "".join(
-        f'<label class="field"><span>{report.category_name(a.rsplit(":", 1)[1])}</span>'
-        f'<input name="{a}" inputmode="decimal" placeholder="без ліміту" value="{escape(values[a])}"></label>'
+            session["added"] = done
+            return redirect(url_for("limits", account=chosen))
+    if chosen not in accounts:
+        chosen = accounts[0]
+    if request.method == "GET":
+        amount = f"{mine[chosen]:f}".replace(".", ",") if chosen in mine else ""
+    flash = escape(session.pop("added", ""))
+    options = "".join(
+        f'<option value="{a}"{" selected" if a == chosen else ""}>{name(a)}{f" — {report.zl(mine[a], 0)}" if a in mine else ""}</option>'
         for a in accounts
     )
+    rows = "".join(
+        f'<a class="lrow" href="{url_for("limits", account=a)}"><span>{name(a)}</span><b>{report.zl(v, 0)}</b></a>'
+        for a, v in mine.items()
+    ) or '<p class="foot">Лімітів ще немає. Оберіть категорію вище.</p>'
+    remove = '<button class="btn ghost wide" type="submit" name="remove" value="1" formnovalidate>Прибрати ліміт</button>' if chosen in mine else ""
     return page("Ліміти", f"""
 <header><h1>Ліміти</h1><nav class="nav"><a class="btn ghost" href="{url_for('index')}">До звіту</a></nav></header>
-<section class="card"><form method="post">
+{f'<p class="flash" role="status">{flash}</p>' if flash else ''}
+<section class="card"><h2>Задати ліміт</h2><form method="post">
 <input type="hidden" name="csrf" value="{csrf_token()}">
 {f'<p class="error" role="alert">{escape(error)}</p>' if error else ''}
-<p class="foot">Скільки {me()} готові витрачати на місяць, зл. Порожнє поле — без ліміту.</p>
-{fields}
-<button class="btn wide" type="submit">Зберегти</button>
-</form></section>""")
+<label class="field"><span>Категорія</span><select name="account" onchange="location.href='?account='+encodeURIComponent(this.value)">{options}</select></label>
+<label class="field"><span>Ліміт на місяць, зл</span><input name="amount" inputmode="decimal" placeholder="500" value="{escape(amount)}" required></label>
+<div class="stackbtn"><button class="btn wide" type="submit">Зберегти</button>{remove}</div>
+</form></section>
+<section class="card"><h2>Встановлені ліміти · {me()}</h2>{rows}</section>""")
 
 
 def save_limits(mine):

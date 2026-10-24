@@ -101,8 +101,12 @@ class Privacy(unittest.TestCase):
     def test_limits_screen_cannot_touch_other_persons_limits(self):
         token = self.login("marko")
         self.assertNotIn("Expenses:Оля", self.client.get("/limits").text)
-        self.client.post("/limits", data={"csrf": token, "Expenses:Оля:Кафе": "1", "Expenses:Марко:Кафе": "99"})
+        r = self.client.post("/limits", data={"csrf": token, "account": "Expenses:Оля:Кафе", "amount": "1"})
+        self.assertIn("Оберіть категорію", r.text)
+        self.client.post("/limits", data={"csrf": token, "account": "Expenses:Марко:Кафе", "amount": "99"})
         self.assertEqual(report.load_limits(), {"Expenses:Оля:Кафе": 250, "Expenses:Марко:Кафе": 99})
+        self.client.post("/limits", data={"csrf": token, "account": "Expenses:Марко:Кафе", "remove": "1"})
+        self.assertEqual(report.load_limits(), {"Expenses:Оля:Кафе": 250})
 
     def test_no_data_without_login_and_no_fava(self):
         for path in ("/", "/add", "/limits"):
