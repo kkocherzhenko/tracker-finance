@@ -1,10 +1,10 @@
 ; ===== Оля: data/statement.csv, операцій: 142 =====
 
-2026-08-01 * "Rent — Mokotów flat" #fixed
+2026-08-01 * "Rent — Mokotów flat" #fixed #shared
   Assets:Оля:Банк  -3200.00 PLN
   Expenses:Оля:Житло
 
-2026-08-02 * "Żabka"
+2026-08-02 * "Żabka" #shared
   Assets:Оля:Банк  -29.35 PLN
   Expenses:Оля:Продукти
 
@@ -16,15 +16,15 @@
   Assets:Оля:Банк  -110.00 PLN
   Expenses:Оля:Транспорт
 
-2026-08-03 * "Żabka"
+2026-08-03 * "Żabka" #shared
   Assets:Оля:Банк  -20.98 PLN
   Expenses:Оля:Продукти
 
-2026-08-03 * "Lidl"
+2026-08-03 * "Lidl" #shared
   Assets:Оля:Банк  -106.20 PLN
   Expenses:Оля:Продукти
 
-2026-08-04 * "Biedronka"
+2026-08-04 * "Biedronka" #shared
   Assets:Оля:Банк  -37.55 PLN
   Expenses:Оля:Продукти
 
@@ -32,7 +32,7 @@
   Assets:Оля:Банк  -43.00 PLN
   Expenses:Оля:Підписки
 
-2026-08-05 * "Biedronka"
+2026-08-05 * "Biedronka" #shared
   Assets:Оля:Банк  -21.37 PLN
   Expenses:Оля:Продукти
 
@@ -40,11 +40,11 @@
   Assets:Оля:Банк  -39.88 PLN
   Expenses:Оля:Кафе
 
-2026-08-06 * "Biedronka"
+2026-08-06 * "Biedronka" #shared
   Assets:Оля:Банк  -123.48 PLN
   Expenses:Оля:Продукти
 
-2026-08-06 * "Biedronka"
+2026-08-06 * "Biedronka" #shared
   Assets:Оля:Банк  -131.81 PLN
   Expenses:Оля:Продукти
 
@@ -52,11 +52,11 @@
   Assets:Оля:Банк  -66.47 PLN
   Expenses:Оля:Доставка-Їжі
 
-2026-08-08 * "Żabka"
+2026-08-08 * "Żabka" #shared
   Assets:Оля:Банк  -15.11 PLN
   Expenses:Оля:Продукти
 
-2026-08-09 * "Biedronka"
+2026-08-09 * "Biedronka" #shared
   Assets:Оля:Банк  -67.16 PLN
   Expenses:Оля:Продукти
 
@@ -72,7 +72,7 @@
   Assets:Оля:Банк  9800.00 PLN
   Income:Оля:Зарплата
 
-2026-08-10 * "Carrefour Express"
+2026-08-10 * "Carrefour Express" #shared
   Assets:Оля:Банк  -26.32 PLN
   Expenses:Оля:Продукти
 
@@ -84,11 +84,11 @@
   Assets:Оля:Банк  -23.99 PLN
   Expenses:Оля:Підписки
 
-2026-08-12 * "Carrefour Express"
+2026-08-12 * "Carrefour Express" #shared
   Assets:Оля:Банк  -16.17 PLN
   Expenses:Оля:Продукти
 
-2026-08-12 * "Lidl"
+2026-08-12 * "Lidl" #shared
   Assets:Оля:Банк  -53.04 PLN
   Expenses:Оля:Продукти
 
@@ -96,19 +96,19 @@
   Assets:Оля:Банк  -25.59 PLN
   Expenses:Оля:Кафе
 
-2026-08-13 * "Żabka"
+2026-08-13 * "Żabka" #shared
   Assets:Оля:Банк  -29.88 PLN
   Expenses:Оля:Продукти
 
-2026-08-13 * "Żabka"
+2026-08-13 * "Żabka" #shared
   Assets:Оля:Банк  -25.95 PLN
   Expenses:Оля:Продукти
 
-2026-08-14 * "Żabka"
+2026-08-14 * "Żabka" #shared
   Assets:Оля:Банк  -12.16 PLN
   Expenses:Оля:Продукти
 
-2026-08-14 * "Carrefour Express"
+2026-08-14 * "Carrefour Express" #shared
   Assets:Оля:Банк  -34.81 PLN
   Expenses:Оля:Продукти
 
@@ -116,15 +116,15 @@
   Assets:Оля:Банк  -86.50 PLN
   Expenses:Оля:Підписки
 
-2026-08-15 * "Carrefour Express"
+2026-08-15 * "Carrefour Express" #shared
   Assets:Оля:Банк  -55.05 PLN
   Expenses:Оля:Продукти
 
-2026-08-17 * "Lidl"
+2026-08-17 * "Lidl" #shared
   Assets:Оля:Банк  -37.21 PLN
   Expenses:Оля:Продукти
 
-2026-08-17 * "Biedronka"
+2026-08-17 * "Biedronka" #shared
   Assets:Оля:Банк  -18.58 PLN
   Expenses:Оля:Продукти
 
@@ -132,11 +132,11 @@
   Assets:Оля:Банк  -45.46 PLN
   Expenses:Оля:Доставка-Їжі
 
-2026-08-18 * "Żabka"
+2026-08-18 * "Żabka" #shared
   Assets:Оля:Банк  -24.09 PLN
   Expenses:Оля:Продукти
 
-2026-08-18 * "Biedronka"
+2026-08-18 * "Biedronka" #shared
   Assets:Оля:Банк  -67.47 PLN
   Expenses:Оля:Продукти
 
@@ -164,11 +164,11 @@
   Assets:Оля:Банк  -37.51 PLN
   Expenses:Оля:Доставка-Їжі
 
-2026-08-22 * "Carrefour Express"
+2026-08-22 * "Carrefour Express" #shared
   Assets:Оля:Банк  -20.43 PLN
   Expenses:Оля:Продукти
 
-2026-08-22 * "Żabka"
+2026-08-22 * "Żabka" #shared
   Assets:Оля:Банк  -9.72 PLN
   Expenses:Оля:Продукти
 
@@ -180,7 +180,7 @@
   Assets:Оля:Банк  -43.94 PLN
   Expenses:Оля:Кафе
 
-2026-08-24 * "Żabka"
+2026-08-24 * "Żabka" #shared
   Assets:Оля:Банк  -16.02 PLN
   Expenses:Оля:Продукти
 
@@ -188,11 +188,11 @@
   Assets:Оля:Банк  -28.03 PLN
   Expenses:Оля:Кафе
 
-2026-08-25 * "Żabka"
+2026-08-25 * "Żabka" #shared
   Assets:Оля:Банк  -8.14 PLN
   Expenses:Оля:Продукти
 
-2026-08-25 * "Żabka"
+2026-08-25 * "Żabka" #shared
   Assets:Оля:Банк  -34.24 PLN
   Expenses:Оля:Продукти
 
@@ -200,11 +200,11 @@
   Assets:Оля:Банк  -14.11 PLN
   Expenses:Оля:Транспорт
 
-2026-08-26 * "Żabka"
+2026-08-26 * "Żabka" #shared
   Assets:Оля:Банк  -23.94 PLN
   Expenses:Оля:Продукти
 
-2026-08-27 * "Carrefour Express"
+2026-08-27 * "Carrefour Express" #shared
   Assets:Оля:Банк  -59.17 PLN
   Expenses:Оля:Продукти
 
@@ -212,7 +212,7 @@
   Assets:Оля:Банк  -30.92 PLN
   Expenses:Оля:Кафе
 
-2026-08-29 * "Biedronka"
+2026-08-29 * "Biedronka" #shared
   Assets:Оля:Банк  -125.73 PLN
   Expenses:Оля:Продукти
 
@@ -220,7 +220,7 @@
   Assets:Оля:Банк  -38.12 PLN
   Expenses:Оля:Кафе
 
-2026-08-31 * "Carrefour Express"
+2026-08-31 * "Carrefour Express" #shared
   Assets:Оля:Банк  -41.88 PLN
   Expenses:Оля:Продукти
 
@@ -228,11 +228,11 @@
   Assets:Оля:Банк  -84.76 PLN
   Expenses:Оля:Доставка-Їжі
 
-2026-09-01 * "Rent — Mokotów flat" #fixed
+2026-09-01 * "Rent — Mokotów flat" #fixed #shared
   Assets:Оля:Банк  -3200.00 PLN
   Expenses:Оля:Житло
 
-2026-09-01 * "Biedronka"
+2026-09-01 * "Biedronka" #shared
   Assets:Оля:Банк  -137.65 PLN
   Expenses:Оля:Продукти
 
@@ -240,11 +240,11 @@
   Assets:Оля:Банк  -43.20 PLN
   Expenses:Оля:Транспорт
 
-2026-09-02 * "Biedronka"
+2026-09-02 * "Biedronka" #shared
   Assets:Оля:Банк  -45.94 PLN
   Expenses:Оля:Продукти
 
-2026-09-02 * "Biedronka"
+2026-09-02 * "Biedronka" #shared
   Assets:Оля:Банк  -130.81 PLN
   Expenses:Оля:Продукти
 
@@ -260,7 +260,7 @@
   Assets:Оля:Банк  -33.08 PLN
   Expenses:Оля:Транспорт
 
-2026-09-04 * "Carrefour Express"
+2026-09-04 * "Carrefour Express" #shared
   Assets:Оля:Банк  -73.73 PLN
   Expenses:Оля:Продукти
 
@@ -268,7 +268,7 @@
   Assets:Оля:Банк  -43.00 PLN
   Expenses:Оля:Підписки
 
-2026-09-05 * "Lidl"
+2026-09-05 * "Lidl" #shared
   Assets:Оля:Банк  -99.57 PLN
   Expenses:Оля:Продукти
 
@@ -276,15 +276,15 @@
   Assets:Оля:Банк  -87.33 PLN
   Expenses:Оля:Доставка-Їжі
 
-2026-09-06 * "Carrefour Express"
+2026-09-06 * "Carrefour Express" #shared
   Assets:Оля:Банк  -70.08 PLN
   Expenses:Оля:Продукти
 
-2026-09-07 * "Biedronka"
+2026-09-07 * "Biedronka" #shared
   Assets:Оля:Банк  -29.75 PLN
   Expenses:Оля:Продукти
 
-2026-09-07 * "Żabka"
+2026-09-07 * "Żabka" #shared
   Assets:Оля:Банк  -32.26 PLN
   Expenses:Оля:Продукти
 
@@ -292,7 +292,7 @@
   Assets:Оля:Банк  -38.71 PLN
   Expenses:Оля:Кафе
 
-2026-09-08 * "Biedronka"
+2026-09-08 * "Biedronka" #shared
   Assets:Оля:Банк  -49.76 PLN
   Expenses:Оля:Продукти
 
@@ -300,7 +300,7 @@
   Assets:Оля:Банк  -83.07 PLN
   Expenses:Оля:Доставка-Їжі
 
-2026-09-09 * "Żabka"
+2026-09-09 * "Żabka" #shared
   Assets:Оля:Банк  -15.61 PLN
   Expenses:Оля:Продукти
 
@@ -312,7 +312,7 @@
   Assets:Оля:Банк  9800.00 PLN
   Income:Оля:Зарплата
 
-2026-09-10 * "Biedronka"
+2026-09-10 * "Biedronka" #shared
   Assets:Оля:Банк  -34.21 PLN
   Expenses:Оля:Продукти
 
@@ -320,11 +320,11 @@
   Assets:Оля:Банк  -33.31 PLN
   Expenses:Оля:Кафе
 
-2026-09-11 * "Biedronka"
+2026-09-11 * "Biedronka" #shared
   Assets:Оля:Банк  -59.78 PLN
   Expenses:Оля:Продукти
 
-2026-09-11 * "Biedronka"
+2026-09-11 * "Biedronka" #shared
   Assets:Оля:Банк  -116.90 PLN
   Expenses:Оля:Продукти
 
@@ -336,11 +336,11 @@
   Assets:Оля:Банк  -23.99 PLN
   Expenses:Оля:Підписки
 
-2026-09-12 * "Biedronka"
+2026-09-12 * "Biedronka" #shared
   Assets:Оля:Банк  -87.76 PLN
   Expenses:Оля:Продукти
 
-2026-09-13 * "Żabka"
+2026-09-13 * "Żabka" #shared
   Assets:Оля:Банк  -31.95 PLN
   Expenses:Оля:Продукти
 
@@ -348,7 +348,7 @@
   Assets:Оля:Банк  -22.91 PLN
   Expenses:Оля:Кафе
 
-2026-09-14 * "Carrefour Express"
+2026-09-14 * "Carrefour Express" #shared
   Assets:Оля:Банк  -29.45 PLN
   Expenses:Оля:Продукти
 
@@ -360,31 +360,31 @@
   Assets:Оля:Банк  -86.50 PLN
   Expenses:Оля:Підписки
 
-2026-09-15 * "Lidl"
+2026-09-15 * "Lidl" #shared
   Assets:Оля:Банк  -25.37 PLN
   Expenses:Оля:Продукти
 
-2026-09-16 * "Carrefour Express"
+2026-09-16 * "Carrefour Express" #shared
   Assets:Оля:Банк  -56.21 PLN
   Expenses:Оля:Продукти
 
-2026-09-17 * "Lidl"
+2026-09-17 * "Lidl" #shared
   Assets:Оля:Банк  -28.14 PLN
   Expenses:Оля:Продукти
 
-2026-09-17 * "Żabka"
+2026-09-17 * "Żabka" #shared
   Assets:Оля:Банк  -31.79 PLN
   Expenses:Оля:Продукти
 
-2026-09-18 * "Biedronka"
+2026-09-18 * "Biedronka" #shared
   Assets:Оля:Банк  -31.58 PLN
   Expenses:Оля:Продукти
 
-2026-09-18 * "Lidl"
+2026-09-18 * "Lidl" #shared
   Assets:Оля:Банк  -76.38 PLN
   Expenses:Оля:Продукти
 
-2026-09-19 * "Carrefour Express"
+2026-09-19 * "Carrefour Express" #shared
   Assets:Оля:Банк  -64.64 PLN
   Expenses:Оля:Продукти
 
@@ -392,7 +392,7 @@
   Assets:Оля:Банк  -45.00 PLN
   Expenses:Оля:Мобільний-оператор
 
-2026-09-20 * "Lidl"
+2026-09-20 * "Lidl" #shared
   Assets:Оля:Банк  -71.43 PLN
   Expenses:Оля:Продукти
 
@@ -400,11 +400,11 @@
   Assets:Оля:Банк  -143.18 PLN
   Expenses:Оля:Спорт
 
-2026-09-22 * "Biedronka"
+2026-09-22 * "Biedronka" #shared
   Assets:Оля:Банк  -59.87 PLN
   Expenses:Оля:Продукти
 
-2026-09-23 * "Carrefour Express"
+2026-09-23 * "Carrefour Express" #shared
   Assets:Оля:Банк  -72.96 PLN
   Expenses:Оля:Продукти
 
@@ -412,11 +412,11 @@
   Assets:Оля:Банк  -61.44 PLN
   Expenses:Оля:Доставка-Їжі
 
-2026-09-25 * "Biedronka"
+2026-09-25 * "Biedronka" #shared
   Assets:Оля:Банк  -26.71 PLN
   Expenses:Оля:Продукти
 
-2026-09-25 * "Carrefour Express"
+2026-09-25 * "Carrefour Express" #shared
   Assets:Оля:Банк  -64.66 PLN
   Expenses:Оля:Продукти
 
@@ -436,23 +436,23 @@
   Assets:Оля:Банк  -34.28 PLN
   Expenses:Оля:Кафе
 
-2026-09-30 * "Żabka"
+2026-09-30 * "Żabka" #shared
   Assets:Оля:Банк  -17.12 PLN
   Expenses:Оля:Продукти
 
-2026-10-01 * "Rent — Mokotów flat" #fixed
+2026-10-01 * "Rent — Mokotów flat" #fixed #shared
   Assets:Оля:Банк  -3200.00 PLN
   Expenses:Оля:Житло
 
-2026-10-01 * "Lidl"
+2026-10-01 * "Lidl" #shared
   Assets:Оля:Банк  -28.35 PLN
   Expenses:Оля:Продукти
 
-2026-10-02 * "Żabka"
+2026-10-02 * "Żabka" #shared
   Assets:Оля:Банк  -26.90 PLN
   Expenses:Оля:Продукти
 
-2026-10-02 * "Biedronka"
+2026-10-02 * "Biedronka" #shared
   Assets:Оля:Банк  -109.84 PLN
   Expenses:Оля:Продукти
 
@@ -464,7 +464,7 @@
   Assets:Оля:Банк  -110.00 PLN
   Expenses:Оля:Транспорт
 
-2026-10-03 * "Lidl"
+2026-10-03 * "Lidl" #shared
   Assets:Оля:Банк  -141.55 PLN
   Expenses:Оля:Продукти
 
@@ -472,7 +472,7 @@
   Assets:Оля:Банк  -23.67 PLN
   Expenses:Оля:Транспорт
 
-2026-10-04 * "Żabka"
+2026-10-04 * "Żabka" #shared
   Assets:Оля:Банк  -16.76 PLN
   Expenses:Оля:Продукти
 
@@ -484,15 +484,15 @@
   Assets:Оля:Банк  -43.00 PLN
   Expenses:Оля:Підписки
 
-2026-10-05 * "Carrefour Express"
+2026-10-05 * "Carrefour Express" #shared
   Assets:Оля:Банк  -76.63 PLN
   Expenses:Оля:Продукти
 
-2026-10-06 * "Biedronka"
+2026-10-06 * "Biedronka" #shared
   Assets:Оля:Банк  -110.81 PLN
   Expenses:Оля:Продукти
 
-2026-10-07 * "Biedronka"
+2026-10-07 * "Biedronka" #shared
   Assets:Оля:Банк  -119.79 PLN
   Expenses:Оля:Продукти
 
@@ -504,7 +504,7 @@
   Assets:Оля:Банк  -35.66 PLN
   Expenses:Оля:Транспорт
 
-2026-10-09 * "Biedronka"
+2026-10-09 * "Biedronka" #shared
   Assets:Оля:Банк  -104.29 PLN
   Expenses:Оля:Продукти
 
@@ -512,7 +512,7 @@
   Assets:Оля:Банк  9800.00 PLN
   Income:Оля:Зарплата
 
-2026-10-10 * "Żabka"
+2026-10-10 * "Żabka" #shared
   Assets:Оля:Банк  -33.55 PLN
   Expenses:Оля:Продукти
 
@@ -520,7 +520,7 @@
   Assets:Оля:Банк  -24.40 PLN
   Expenses:Оля:Кафе
 
-2026-10-11 * "Żabka"
+2026-10-11 * "Żabka" #shared
   Assets:Оля:Банк  -34.74 PLN
   Expenses:Оля:Продукти
 
@@ -536,11 +536,11 @@
   Assets:Оля:Банк  -23.99 PLN
   Expenses:Оля:Підписки
 
-2026-10-12 * "Żabka"
+2026-10-12 * "Żabka" #shared
   Assets:Оля:Банк  -21.48 PLN
   Expenses:Оля:Продукти
 
-2026-10-12 * "Carrefour Express"
+2026-10-12 * "Carrefour Express" #shared
   Assets:Оля:Банк  -28.58 PLN
   Expenses:Оля:Продукти
 
@@ -548,15 +548,15 @@
   Assets:Оля:Банк  -39.75 PLN
   Expenses:Оля:Кафе
 
-2026-10-13 * "Biedronka"
+2026-10-13 * "Biedronka" #shared
   Assets:Оля:Банк  -74.48 PLN
   Expenses:Оля:Продукти
 
-2026-10-13 * "Carrefour Express"
+2026-10-13 * "Carrefour Express" #shared
   Assets:Оля:Банк  -29.61 PLN
   Expenses:Оля:Продукти
 
-2026-10-14 * "Żabka"
+2026-10-14 * "Żabka" #shared
   Assets:Оля:Банк  -20.48 PLN
   Expenses:Оля:Продукти
 
@@ -576,7 +576,7 @@
 
 ; ===== Марко: data/marko-statement.csv, операцій: 109 =====
 
-2026-08-01 * "ŻABKA Z5821 WARSZAWA"
+2026-08-01 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -24.64 PLN
   Expenses:Марко:Продукти
 
@@ -592,11 +592,11 @@
   Assets:Марко:Банк  -159.00 PLN
   Expenses:Марко:Спорт
 
-2026-08-03 * "KAUFLAND WARSZAWA MOKOTÓW"
+2026-08-03 * "KAUFLAND WARSZAWA MOKOTÓW" #shared
   Assets:Марко:Банк  -226.21 PLN
   Expenses:Марко:Продукти
 
-2026-08-04 * "KAUFLAND WARSZAWA MOKOTÓW"
+2026-08-04 * "KAUFLAND WARSZAWA MOKOTÓW" #shared
   Assets:Марко:Банк  -181.85 PLN
   Expenses:Марко:Продукти
 
@@ -608,7 +608,7 @@
   Assets:Марко:Банк  -87.00 PLN
   Expenses:Марко:Розваги
 
-2026-08-09 * "ŻABKA Z5821 WARSZAWA"
+2026-08-09 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -11.19 PLN
   Expenses:Марко:Продукти
 
@@ -620,7 +620,7 @@
   Assets:Марко:Банк  -66.66 PLN
   Expenses:Марко:Доставка-Їжі
 
-2026-08-11 * "BIEDRONKA 4417 WARSZAWA"
+2026-08-11 * "BIEDRONKA 4417 WARSZAWA" #shared
   Assets:Марко:Банк  -19.58 PLN
   Expenses:Марко:Продукти
 
@@ -636,7 +636,7 @@
   Assets:Марко:Банк  -22.32 PLN
   Expenses:Марко:Транспорт
 
-2026-08-14 * "AUCHAN WARSZAWA"
+2026-08-14 * "AUCHAN WARSZAWA" #shared
   Assets:Марко:Банк  -258.81 PLN
   Expenses:Марко:Продукти
 
@@ -644,7 +644,7 @@
   Assets:Марко:Банк  -39.42 PLN
   Expenses:Марко:Транспорт
 
-2026-08-16 * "ŻABKA Z5821 WARSZAWA"
+2026-08-16 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -33.39 PLN
   Expenses:Марко:Продукти
 
@@ -652,7 +652,7 @@
   Assets:Марко:Банк  -21.00 PLN
   Expenses:Марко:Кафе
 
-2026-08-17 * "ŻABKA Z5821 WARSZAWA"
+2026-08-17 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -28.36 PLN
   Expenses:Марко:Продукти
 
@@ -660,7 +660,7 @@
   Assets:Марко:Банк  -91.38 PLN
   Expenses:Марко:Кафе
 
-2026-08-19 * "ŻABKA Z5821 WARSZAWA"
+2026-08-19 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -25.63 PLN
   Expenses:Марко:Продукти
 
@@ -672,19 +672,19 @@
   Assets:Марко:Банк  -60.34 PLN
   Expenses:Марко:Краса-Побут
 
-2026-08-22 * "BIEDRONKA 4417 WARSZAWA"
+2026-08-22 * "BIEDRONKA 4417 WARSZAWA" #shared
   Assets:Марко:Банк  -66.29 PLN
   Expenses:Марко:Продукти
 
-2026-08-22 * "ŻABKA Z5821 WARSZAWA"
+2026-08-22 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -34.70 PLN
   Expenses:Марко:Продукти
 
-2026-08-23 * "BIEDRONKA 4417 WARSZAWA"
+2026-08-23 * "BIEDRONKA 4417 WARSZAWA" #shared
   Assets:Марко:Банк  -20.90 PLN
   Expenses:Марко:Продукти
 
-2026-08-23 * "ŻABKA Z5821 WARSZAWA"
+2026-08-23 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -17.89 PLN
   Expenses:Марко:Продукти
 
@@ -696,7 +696,7 @@
   Assets:Марко:Банк  -94.56 PLN
   Expenses:Марко:Доставка-Їжі
 
-2026-08-24 * "ŻABKA Z5821 WARSZAWA"
+2026-08-24 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -37.13 PLN
   Expenses:Марко:Продукти
 
@@ -708,7 +708,7 @@
   Assets:Марко:Банк  7600.00 PLN
   Income:Марко:Зарплата
 
-2026-08-27 * "BIEDRONKA 4417 WARSZAWA"
+2026-08-27 * "BIEDRONKA 4417 WARSZAWA" #shared
   Assets:Марко:Банк  -42.17 PLN
   Expenses:Марко:Продукти
 
@@ -724,15 +724,15 @@
   Assets:Марко:Банк  -23.91 PLN
   Expenses:Марко:Транспорт
 
-2026-08-29 * "ŻABKA Z5821 WARSZAWA"
+2026-08-29 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -16.43 PLN
   Expenses:Марко:Продукти
 
-2026-08-30 * "ŻABKA Z5821 WARSZAWA"
+2026-08-30 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -32.68 PLN
   Expenses:Марко:Продукти
 
-2026-09-01 * "BIEDRONKA 4417 WARSZAWA"
+2026-09-01 * "BIEDRONKA 4417 WARSZAWA" #shared
   Assets:Марко:Банк  -19.54 PLN
   Expenses:Марко:Продукти
 
@@ -744,11 +744,11 @@
   Assets:Марко:Банк  -159.00 PLN
   Expenses:Марко:Спорт
 
-2026-09-03 * "ŻABKA Z5821 WARSZAWA"
+2026-09-03 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -36.26 PLN
   Expenses:Марко:Продукти
 
-2026-09-05 * "ŻABKA Z5821 WARSZAWA"
+2026-09-05 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -14.61 PLN
   Expenses:Марко:Продукти
 
@@ -756,15 +756,15 @@
   Assets:Марко:Банк  -25.99 PLN
   Expenses:Марко:Підписки
 
-2026-09-06 * "ŻABKA Z5821 WARSZAWA"
+2026-09-06 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -14.94 PLN
   Expenses:Марко:Продукти
 
-2026-09-10 * "KAUFLAND WARSZAWA MOKOTÓW"
+2026-09-10 * "KAUFLAND WARSZAWA MOKOTÓW" #shared
   Assets:Марко:Банк  -187.69 PLN
   Expenses:Марко:Продукти
 
-2026-09-10 * "BIEDRONKA 4417 WARSZAWA"
+2026-09-10 * "BIEDRONKA 4417 WARSZAWA" #shared
   Assets:Марко:Банк  -41.94 PLN
   Expenses:Марко:Продукти
 
@@ -772,7 +772,7 @@
   Assets:Марко:Банк  -15.27 PLN
   Expenses:Марко:Кафе
 
-2026-09-11 * "ŻABKA Z5821 WARSZAWA"
+2026-09-11 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -9.66 PLN
   Expenses:Марко:Продукти
 
@@ -784,15 +784,15 @@
   Assets:Марко:Банк  -55.00 PLN
   Expenses:Марко:Мобільний-оператор
 
-2026-09-12 * "KAUFLAND WARSZAWA MOKOTÓW"
+2026-09-12 * "KAUFLAND WARSZAWA MOKOTÓW" #shared
   Assets:Марко:Банк  -237.62 PLN
   Expenses:Марко:Продукти
 
-2026-09-12 * "ŻABKA Z5821 WARSZAWA"
+2026-09-12 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -23.49 PLN
   Expenses:Марко:Продукти
 
-2026-09-13 * "BIEDRONKA 4417 WARSZAWA"
+2026-09-13 * "BIEDRONKA 4417 WARSZAWA" #shared
   Assets:Марко:Банк  -62.60 PLN
   Expenses:Марко:Продукти
 
@@ -804,7 +804,7 @@
   Assets:Марко:Банк  -16.89 PLN
   Expenses:Марко:Кафе
 
-2026-09-15 * "KAUFLAND WARSZAWA MOKOTÓW"
+2026-09-15 * "KAUFLAND WARSZAWA MOKOTÓW" #shared
   Assets:Марко:Банк  -215.47 PLN
   Expenses:Марко:Продукти
 
@@ -816,19 +816,19 @@
   Assets:Марко:Банк  -94.75 PLN
   Expenses:Марко:Доставка-Їжі
 
-2026-09-17 * "KAUFLAND WARSZAWA MOKOTÓW"
+2026-09-17 * "KAUFLAND WARSZAWA MOKOTÓW" #shared
   Assets:Марко:Банк  -215.59 PLN
   Expenses:Марко:Продукти
 
-2026-09-17 * "ŻABKA Z5821 WARSZAWA"
+2026-09-17 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -24.36 PLN
   Expenses:Марко:Продукти
 
-2026-09-18 * "ŻABKA Z5821 WARSZAWA"
+2026-09-18 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -12.25 PLN
   Expenses:Марко:Продукти
 
-2026-09-20 * "ŻABKA Z5821 WARSZAWA"
+2026-09-20 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -20.18 PLN
   Expenses:Марко:Продукти
 
@@ -840,7 +840,7 @@
   Assets:Марко:Банк  -138.90 PLN
   Expenses:Марко:Електрика
 
-2026-09-21 * "ŻABKA Z5821 WARSZAWA"
+2026-09-21 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -14.60 PLN
   Expenses:Марко:Продукти
 
@@ -848,7 +848,7 @@
   Assets:Марко:Банк  -72.40 PLN
   Expenses:Марко:Доставка-Їжі
 
-2026-09-22 * "ŻABKA Z5821 WARSZAWA"
+2026-09-22 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -36.46 PLN
   Expenses:Марко:Продукти
 
@@ -856,23 +856,23 @@
   Assets:Марко:Банк  -28.77 PLN
   Expenses:Марко:Транспорт
 
-2026-09-23 * "BIEDRONKA 4417 WARSZAWA"
+2026-09-23 * "BIEDRONKA 4417 WARSZAWA" #shared
   Assets:Марко:Банк  -58.60 PLN
   Expenses:Марко:Продукти
 
-2026-09-23 * "ŻABKA Z5821 WARSZAWA"
+2026-09-23 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -11.57 PLN
   Expenses:Марко:Продукти
 
-2026-09-25 * "ŻABKA Z5821 WARSZAWA"
+2026-09-25 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -15.20 PLN
   Expenses:Марко:Продукти
 
-2026-09-26 * "AUCHAN WARSZAWA"
+2026-09-26 * "AUCHAN WARSZAWA" #shared
   Assets:Марко:Банк  -278.88 PLN
   Expenses:Марко:Продукти
 
-2026-09-26 * "ŻABKA Z5821 WARSZAWA"
+2026-09-26 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -29.29 PLN
   Expenses:Марко:Продукти
 
@@ -880,11 +880,11 @@
   Assets:Марко:Банк  7600.00 PLN
   Income:Марко:Зарплата
 
-2026-09-28 * "KAUFLAND WARSZAWA MOKOTÓW"
+2026-09-28 * "KAUFLAND WARSZAWA MOKOTÓW" #shared
   Assets:Марко:Банк  -241.25 PLN
   Expenses:Марко:Продукти
 
-2026-09-28 * "ŻABKA Z5821 WARSZAWA"
+2026-09-28 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -26.40 PLN
   Expenses:Марко:Продукти
 
@@ -892,7 +892,7 @@
   Assets:Марко:Банк  -72.29 PLN
   Expenses:Марко:Доставка-Їжі
 
-2026-09-30 * "BIEDRONKA 4417 WARSZAWA"
+2026-09-30 * "BIEDRONKA 4417 WARSZAWA" #shared
   Assets:Марко:Банк  -51.22 PLN
   Expenses:Марко:Продукти
 
@@ -900,7 +900,7 @@
   Assets:Марко:Банк  -21.46 PLN
   Expenses:Марко:Кафе
 
-2026-10-01 * "ŻABKA Z5821 WARSZAWA"
+2026-10-01 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -32.44 PLN
   Expenses:Марко:Продукти
 
@@ -908,19 +908,19 @@
   Assets:Марко:Банк  -159.00 PLN
   Expenses:Марко:Спорт
 
-2026-10-04 * "BIEDRONKA 4417 WARSZAWA"
+2026-10-04 * "BIEDRONKA 4417 WARSZAWA" #shared
   Assets:Марко:Банк  -21.46 PLN
   Expenses:Марко:Продукти
 
-2026-10-04 * "ŻABKA Z5821 WARSZAWA"
+2026-10-04 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -23.24 PLN
   Expenses:Марко:Продукти
 
-2026-10-05 * "BIEDRONKA 4417 WARSZAWA"
+2026-10-05 * "BIEDRONKA 4417 WARSZAWA" #shared
   Assets:Марко:Банк  -59.49 PLN
   Expenses:Марко:Продукти
 
-2026-10-05 * "ŻABKA Z5821 WARSZAWA"
+2026-10-05 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -21.68 PLN
   Expenses:Марко:Продукти
 
@@ -936,11 +936,11 @@
   Assets:Марко:Банк  -82.78 PLN
   Expenses:Марко:Доставка-Їжі
 
-2026-10-07 * "KAUFLAND WARSZAWA MOKOTÓW"
+2026-10-07 * "KAUFLAND WARSZAWA MOKOTÓW" #shared
   Assets:Марко:Банк  -184.86 PLN
   Expenses:Марко:Продукти
 
-2026-10-07 * "ŻABKA Z5821 WARSZAWA"
+2026-10-07 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -9.46 PLN
   Expenses:Марко:Продукти
 
@@ -956,11 +956,11 @@
   Assets:Марко:Банк  -94.05 PLN
   Expenses:Марко:Покупки
 
-2026-10-08 * "ŻABKA Z5821 WARSZAWA"
+2026-10-08 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -11.53 PLN
   Expenses:Марко:Продукти
 
-2026-10-09 * "ŻABKA Z5821 WARSZAWA"
+2026-10-09 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -19.82 PLN
   Expenses:Марко:Продукти
 
@@ -972,11 +972,11 @@
   Assets:Марко:Банк  -20.85 PLN
   Expenses:Марко:Кафе
 
-2026-10-11 * "BIEDRONKA 4417 WARSZAWA"
+2026-10-11 * "BIEDRONKA 4417 WARSZAWA" #shared
   Assets:Марко:Банк  -35.71 PLN
   Expenses:Марко:Продукти
 
-2026-10-11 * "ŻABKA Z5821 WARSZAWA"
+2026-10-11 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -11.01 PLN
   Expenses:Марко:Продукти
 
@@ -988,11 +988,11 @@
   Assets:Марко:Банк  -55.00 PLN
   Expenses:Марко:Мобільний-оператор
 
-2026-10-12 * "ŻABKA Z5821 WARSZAWA"
+2026-10-12 * "ŻABKA Z5821 WARSZAWA" #shared
   Assets:Марко:Банк  -29.68 PLN
   Expenses:Марко:Продукти
 
-2026-10-14 * "BIEDRONKA 4417 WARSZAWA"
+2026-10-14 * "BIEDRONKA 4417 WARSZAWA" #shared
   Assets:Марко:Банк  -23.75 PLN
   Expenses:Марко:Продукти
 
@@ -1000,7 +1000,7 @@
   Assets:Марко:Банк  -22.44 PLN
   Expenses:Марко:Транспорт
 
-2026-10-15 * "KAUFLAND WARSZAWA MOKOTÓW"
+2026-10-15 * "KAUFLAND WARSZAWA MOKOTÓW" #shared
   Assets:Марко:Банк  -178.95 PLN
   Expenses:Марко:Продукти
 

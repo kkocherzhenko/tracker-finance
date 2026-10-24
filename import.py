@@ -83,6 +83,8 @@ for person, filename, reader, bank, rules_file, opening in PEOPLE:
         else:
             account = other_income if amount > 0 else no_category
         tag = " #fixed" if rule and rule["фіксована"] == "так" else ""
+        # #shared бачать обоє; усе без нього — особисте, і друга людина його не бачить.
+        tag += " #shared" if rule and rule["спільна"] == "так" else ""
         narration = description.replace('"', "'")
         lines.append(
             f'{day} * "{narration}"{tag}\n'

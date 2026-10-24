@@ -11,27 +11,20 @@ from werkzeug.security import generate_password_hash
 
 ENV = Path(__file__).parent / ".env"
 
-print("Логіни і паролі для входу. Порожній логін — завершити.")
-users = []
-while True:
-    login = input("Логін: ").strip()
-    if not login:
-        break
-    if ":" in login or "," in login:
-        print("Логін не може містити «:» або «,».")
-        continue
-    password = getpass.getpass("Пароль (не видно під час вводу): ")
-    if len(password) < 8:
-        print("Пароль має бути щонайменше 8 символів.")
-        continue
-    if getpass.getpass("Ще раз: ") != password:
-        print("Паролі не збігаються.")
-        continue
-    users.append(f"{login}:{generate_password_hash(password)}")
+LOGINS = {"olia": "Оля", "marko": "Марко"}  # як у app.py
 
-if not users:
-    raise SystemExit("Не додано жодного логіна, .env не змінено.")
+lines = [f"SECRET_KEY={secrets.token_hex(32)}"]
+for login, person in LOGINS.items():
+    while True:
+        password = getpass.getpass(f"Пароль для {person} (логін {login}, не видно під час вводу): ")
+        if len(password) < 8:
+            print("Пароль має бути щонайменше 8 символів.")
+        elif getpass.getpass("Ще раз: ") != password:
+            print("Паролі не збігаються.")
+        else:
+            break
+    lines.append(f"TRACKER_HASH_{login.upper()}={generate_password_hash(password)}")
 
-ENV.write_text(f"SECRET_KEY={secrets.token_hex(32)}\nTRACKER_USERS={','.join(users)}\n", encoding="utf-8")
+ENV.write_text("\n".join(lines) + "\n", encoding="utf-8")
 ENV.chmod(0o600)
-print(f"Записано {ENV} ({len(users)} логін(и)). Перезапустіть веб-застосунок.")
+print(f"Записано {ENV}. Логіни: {', '.join(LOGINS)}. Перезапустіть веб-застосунок.")

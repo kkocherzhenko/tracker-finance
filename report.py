@@ -3,6 +3,7 @@
 `uv run python report.py` пише report.html (без інтернету, відкривається в браузері).
 Веб-застосунок (app.py) викликає render() на кожен запит, тож звіт завжди свіжий.
 """
+import csv
 import json
 from collections import defaultdict
 from datetime import date
@@ -16,6 +17,7 @@ from beancount.core import data
 
 ROOT = Path(__file__).parent
 LEDGER = ROOT / "main.beancount"
+LIMITS = ROOT / "limits.csv"
 PEOPLE = ["Оля", "Марко"]
 VIEWS = ["Разом", *PEOPLE]
 MONTH_NAMES = {1: "Січень", 2: "Лютий", 3: "Березень", 4: "Квітень", 5: "Травень", 6: "Червень",
@@ -37,13 +39,43 @@ def pct(a, b, decimals=0):
     return f"{a / b * 100:.{decimals}f}".replace(".", ",") + "%" if b else "—"
 
 
-def load(ledger=LEDGER):
-    """Виконує збережені запити і повертає суми по (рік, місяць) і людині."""
-    entries, errors, _ = loader.load_file(str(ledger))
+def owner(account):
+    """Expenses:Оля:Кафе -> Оля."""
+    parts = account.split(":")
+    return parts[1] if len(parts) > 1 else None
+
+
+def visible(entries, person):
+    """Що бачить person: усі свої записи і лише спільні (#shared) записи іншої людини."""
+    keep = []
+    for e in entries:
+        if isinstance(e, data.Transaction):
+            if "shared" in e.tags or any(owner(p.account) == person for p in e.postings):
+                keep.append(e)
+        elif isinstance(e, data.Open) or not hasattr(e, "account") or owner(e.account) == person:
+            keep.append(e)
+    return keep
+
+
+def load_limits(path=None):
+    """limits.csv: рахунок,ліміт -> {рахунок: Decimal}. Порожній ліміт — ліміту немає."""
+    path = path or LIMITS
+    if not Path(path).exists():
+        return {}
+    with open(path, encoding="utf-8") as f:
+        return {r["рахунок"]: Decimal(r["ліміт"]) for r in csv.DictReader(f) if r["ліміт"].strip()}
+
+
+def load(ledger=LEDGER, viewer=None):
+    """Виконує збережені запити і повертає суми по (рік, місяць) і людині.
+    viewer — хто дивиться: запити бачать лише visible(); None — усі дані (статичний report.html)."""
+    entries, errors, options = loader.load_file(str(ledger))
     if errors:
         raise SystemExit(f"У main.beancount є помилки: {errors[0]}")
     queries = {e.name: e.query_string for e in entries if isinstance(e, data.Query)}
-    connection = beanquery.connect(f"beancount:{ledger}")
+    if viewer:
+        entries = visible(entries, viewer)
+    connection = beanquery.connect("beancount:", entries=entries, errors=[], options=options)
 
     def run(name):
         cursor = connection.execute(queries[name])
@@ -56,12 +88,14 @@ def load(ledger=LEDGER):
         "fixed": defaultdict(lambda: defaultdict(Decimal)),       # (key, view) -> {True/False: сума}
         "variable": defaultdict(dict),                            # key -> {людина: змінні}
         "cash": defaultdict(list),                                # (key, view) -> [запис]
+        "spent": defaultdict(dict),                               # key -> {рахунок: сума}
         "last_day": {},                                           # key -> остання дата в даних
     }
     for r in run("витрати-за-категоріями"):
         key = (r["year"], r["month"])
         for view in ("Разом", r["person"]):
             d["categories"][key, view][category_name(r["category"])] += r["total"]
+        d["spent"][key][f"Expenses:{r['person']}:{r['category']}"] = r["total"]
     for r in run("норма-заощаджень"):
         key = (r["year"], r["month"])
         for view in ("Разом", r["person"]):
@@ -130,7 +164,9 @@ def stacked(parts):
     return f'<div class="stack">{segs}</div><div class="legend">{legend}</div>'
 
 
-def block_savings(d, key, view, partial):
+def block_savings(d, key, view, partial, private=False):
+    if private:
+        return f'<section class="card"><h2>2. Скільки відкладено</h2><p class="verdict">Доходи й заощадження {view} бачить лише {view}.</p></section>'
     s = d["savings"][key, view]
     income, spent, saved = s["income"], s["spent"], s["saved"]
     if not income:
@@ -165,6 +201,48 @@ def block_fixed(d, key, view):
 <p class="verdict">Змінних витрат, якими можна керувати, — {zl(managed)}.</p>{by_person}</section>"""
 
 
+def limit_rows(d, key, view, viewer, limits):
+    """[(назва, витрачено, ліміт)] для рахунків цього перегляду. Ліміти бачить лише їхній власник."""
+    owners = PEOPLE if view == "Разом" else [view]
+    rows = []
+    for account, limit in limits.items():
+        who = owner(account)
+        if who in owners and viewer in (None, who):
+            name = category_name(account.rsplit(":", 1)[1]) + (f" · {who}" if view == "Разом" and not viewer else "")
+            rows.append((name, d["spent"][key].get(account, Decimal(0)), limit))
+    return sorted(rows, key=lambda r: -(r[1] / r[2] if r[2] else 0))
+
+
+def level(spent, limit):
+    """Зелений до 80%, жовтий 80–100%, червоний понад ліміт."""
+    if spent > limit:
+        return "over", f"перевищено на {zl(spent - limit, 0)}"
+    if spent >= limit * Decimal("0.8"):
+        return "near", f"{pct(spent, limit)} ліміту"
+    return "fine", f"{pct(spent, limit)} ліміту"
+
+
+def limits_banner(rows):
+    hot = [f"{escape(n)}: {level(s, l)[1]}" for n, s, l in rows if level(s, l)[0] != "fine"]
+    return f'<p class="alert" role="alert"><b>Увага, ліміти.</b> {" · ".join(hot)}</p>' if hot else ""
+
+
+def block_limits(rows, view, viewer, settings_url):
+    if viewer and view not in ("Разом", viewer):
+        return f'<section class="card"><h2>4. Ліміти</h2><p class="verdict">Ліміти {view} бачить лише {view}.</p></section>'
+    link = f' <a href="{settings_url}">Налаштувати ліміти</a>' if settings_url else ""
+    if not rows:
+        return f'<section class="card"><h2>4. Ліміти</h2><p class="verdict">Лімітів ще немає.{link}</p></section>'
+    items = "".join(
+        f'<div class="limit {level(s, l)[0]}"><div class="lhead"><span>{escape(n)}</span>'
+        f'<span>{zl(s, 0)} з {zl(l, 0)}</span></div>'
+        f'<span class="ltrack"><span class="lbar" style="width:{min(s / l * 100, 100) if l else 100:.1f}%"></span></span>'
+        f'<small>{level(s, l)[1]}</small></div>'
+        for n, s, l in rows
+    )
+    return f'<section class="card"><h2>4. Ліміти на місяць</h2>{items}<p class="foot">{link}</p></section>'
+
+
 def block_cash(d, key, view):
     rows = d["cash"][key, view]
     if not rows:
@@ -181,7 +259,7 @@ def block_cash(d, key, view):
 
 
 CSS = """
-:root { --surface:#f5f5f7; --card:#fff; --ink:#1d1d1f; --ink2:#6e6e73; --line:#e5e5ea; --accent:#0071e3; --muted:#c7c7cc; --warn:#fff4d6; --ok:#e3f5e1; --seg:#e3e3e8; --glass:rgba(245,245,247,.8); }
+:root { --surface:#f5f5f7; --card:#fff; --ink:#1d1d1f; --ink2:#6e6e73; --line:#e5e5ea; --accent:#0071e3; --muted:#c7c7cc; --warn:#fff4d6; --ok:#e3f5e1; --seg:#e3e3e8; --glass:rgba(245,245,247,.8); --fine:#34c759; --near:#ff9f0a; --over:#ff3b30; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --surface:#000; --card:#1c1c1e; --ink:#f5f5f7; --ink2:#98989d; --line:#2c2c2e; --accent:#0a84ff; --muted:#48484a; --warn:#3a2f0b; --ok:#14331a; --seg:#2c2c2e; --glass:rgba(0,0,0,.75); } }
 :root[data-theme="dark"] { --surface:#000; --card:#1c1c1e; --ink:#f5f5f7; --ink2:#98989d; --line:#2c2c2e; --accent:#0a84ff; --muted:#48484a; --warn:#3a2f0b; --ok:#14331a; --seg:#2c2c2e; --glass:rgba(0,0,0,.75); }
 * { box-sizing:border-box; }
@@ -189,15 +267,23 @@ body { margin:0; background:var(--surface); color:var(--ink); font:16px/1.5 -app
 main { max-width:720px; margin:0 auto; padding:0 16px 48px; padding-top:env(safe-area-inset-top, 0); }
 header { padding:24px 0 8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; } h1 { margin:0; font-size:2.1rem; font-weight:700; letter-spacing:-.02em; flex:1; }
 .nav { display:flex; gap:8px; align-items:center; }
-.btn { font:inherit; font-size:.95rem; border:0; border-radius:999px; padding:8px 16px; background:var(--accent); color:#fff; text-decoration:none; cursor:pointer; font-weight:600; }
+.btn { font:inherit; font-size:.95rem; border:0; border-radius:999px; padding:8px 16px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; background:var(--accent); color:#fff; text-decoration:none; cursor:pointer; font-weight:600; }
 .btn.ghost { background:var(--seg); color:var(--ink); font-weight:400; }
 .tabs { display:flex; gap:2px; padding:4px 0; }
 .sticky { position:sticky; top:0; z-index:1; background:var(--glass); backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px); padding:4px 0; }
 .tabs button:first-child { border-radius:9px 0 0 9px; } .tabs button:last-child { border-radius:0 9px 9px 0; }
-.tabs button { flex:1; font:inherit; font-size:.9rem; color:var(--ink); background:var(--seg); border:0; border-radius:0; padding:7px 8px; cursor:pointer; }
+.tabs button { flex:1; font:inherit; font-size:.9rem; color:var(--ink); background:var(--seg); border:0; border-radius:0; padding:7px 8px; min-height:44px; cursor:pointer; }
 .tabs button[aria-selected="true"] { background:var(--accent); color:#fff; font-weight:600; }
 .caption { color:var(--ink2); margin:12px 0; } .caption.partial { background:var(--warn); border-radius:12px; padding:8px 14px; color:var(--ink); }
-.flash { background:var(--ok); border-radius:12px; padding:10px 14px; margin:12px 0; }
+.flash { position:fixed; z-index:2; left:16px; right:16px; bottom:calc(16px + env(safe-area-inset-bottom, 0px)); max-width:688px; margin:0 auto; background:var(--ink); color:var(--card); border-radius:14px; padding:12px 16px; box-shadow:0 4px 16px rgba(0,0,0,.2); animation:toast 5s forwards; }
+@keyframes toast { 0%, 85% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
+.alert { background:var(--warn); border-radius:12px; padding:10px 14px; margin:12px 0; }
+.user { color:var(--ink2); font-size:.95rem; }
+.limit { margin:12px 0; } .lhead { display:flex; justify-content:space-between; gap:8px; font-size:.95rem; }
+.ltrack { display:block; height:10px; background:var(--seg); border-radius:5px; margin:4px 0 2px; overflow:hidden; }
+.lbar { display:block; height:100%; border-radius:5px; } .fine .lbar { background:var(--fine); } .near .lbar { background:var(--near); } .over .lbar { background:var(--over); }
+.over small { color:var(--over); font-weight:600; }
+summary { padding:10px 0; }
 .card { background:var(--card); border-radius:20px; padding:24px; margin:16px 0; box-shadow:0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04); }
 h2 { margin:0 0 8px; font-size:.95rem; color:var(--ink2); font-weight:600; }
 .hero { font-size:3.25rem; line-height:1.1; font-weight:700; letter-spacing:-.03em; } .sub { color:var(--ink2); margin-bottom:16px; }
@@ -219,9 +305,12 @@ small { color:var(--ink2); }
 """
 
 
-def render(ledger=LEDGER, *, head="", nav="", flash=""):
-    """Повна HTML-сторінка звіту. head/nav/flash — додатки від веб-застосунку."""
-    d = load(ledger)
+def render(ledger=LEDGER, *, head="", nav="", flash="", viewer=None, limits=None, settings_url=""):
+    """Повна HTML-сторінка звіту. head/nav/flash/viewer/settings_url — додатки від веб-застосунку."""
+    d = load(ledger, viewer)
+    limit_table = load_limits(limits)
+    other = next(p for p in PEOPLE if p != viewer) if viewer else None
+    scope = {"Разом": f"ваші витрати і спільні витрати {other}", other: "лише спільні витрати"} if viewer else {}
     keys = d["keys"]
     default = next((k for k in reversed(keys) if "закінчено" in month_caption(d, k)), keys[-1])
     month_id = lambda k: f"{k[0]}-{k[1]:02d}"
@@ -237,10 +326,13 @@ def render(ledger=LEDGER, *, head="", nav="", flash=""):
             f'{MONTH_NAMES[k[1]]}{" *" if partial else ""}</button>'
         )
         for v in VIEWS:
+            rows = limit_rows(d, k, v, viewer, limit_table)
+            note = f" · {scope[v]}" if v in scope else ""
             panels.append(
-                f'<div class="month" data-m="{month_id(k)}" data-p="{v}" hidden><p class="caption{" partial" if partial else ""}">'
-                f"{v} · {MONTH_NAMES[k[1]]} {k[0]} · {cap}</p>"
-                f"{block_categories(d, k, v)}{block_savings(d, k, v, partial)}{block_fixed(d, k, v)}{block_cash(d, k, v)}</div>"
+                f'<div class="month" data-m="{month_id(k)}" data-p="{v}" hidden>{limits_banner(rows)}'
+                f'<p class="caption{" partial" if partial else ""}">{v} · {MONTH_NAMES[k[1]]} {k[0]} · {cap}{note}</p>'
+                f"{block_categories(d, k, v)}{block_savings(d, k, v, partial, v == other)}{block_fixed(d, k, v)}"
+                f"{block_limits(rows, v, viewer, settings_url)}{block_cash(d, k, v)}</div>"
             )
     flash_html = f'<p class="flash" role="status">{flash}</p>' if flash else ""
     return f"""<!doctype html>

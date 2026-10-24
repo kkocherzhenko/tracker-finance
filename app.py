@@ -1,11 +1,17 @@
-"""Веб-застосунок для телефону: вхід за паролем, звіт, додавання готівки і Fava за /fava/.
+"""Веб-застосунок для телефону: окремий вхід для Олі й Марка, звіт, готівка, ліміти.
+
+Кожен бачить свої записи і лише спільні (#shared) записи іншої людини (report.visible).
+Fava у веб-застосунку немає: її редактор показує сирі файли обліку з чужими особистими записами.
 
 Налаштування лише через змінні середовища (див. README):
-- SECRET_KEY      — випадковий ключ для підпису cookie сесії;
-- TRACKER_USERS   — логіни і хеші паролів: «логін:хеш,логін:хеш» (створює make_env.py);
+- SECRET_KEY         — випадковий ключ для підпису cookie сесії;
+- TRACKER_HASH_OLIA, TRACKER_HASH_MARKO — хеші паролів (створює make_env.py);
 - TRACKER_DEV=1   — лише для запуску на своєму комп'ютері: дозволяє http без HTTPS.
 """
+import csv
+import fcntl
 import hmac
+import io
 import os
 import re
 import secrets
@@ -18,9 +24,7 @@ from zoneinfo import ZoneInfo
 
 from beancount import loader
 from beancount.core import data
-from fava.application import create_app as create_fava
 from flask import Flask, abort, redirect, request, send_from_directory, session, url_for
-from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash
 
@@ -37,9 +41,8 @@ DEV = os.environ.get("TRACKER_DEV") == "1"
 SECRET_KEY = os.environ.get("SECRET_KEY", "")
 if len(SECRET_KEY) < 32:
     raise RuntimeError("SECRET_KEY не задано (або коротший за 32 символи). Див. README.")
-USERS = dict(
-    item.strip().split(":", 1) for item in os.environ.get("TRACKER_USERS", "").split(",") if ":" in item
-)
+LOGINS = {"olia": "Оля", "marko": "Марко"}  # логін -> людина в обліку
+USERS = {login: h for login in LOGINS if (h := os.environ.get(f"TRACKER_HASH_{login.upper()}"))}
 
 app = Flask(__name__, static_folder=None)
 app.config.update(
@@ -80,7 +83,8 @@ def csrf_token():
 
 
 def check_csrf():
-    if not hmac.compare_digest(request.form.get("csrf", ""), session.get("csrf", "")):
+    expected = session.get("csrf", "")
+    if not expected or not hmac.compare_digest(request.form.get("csrf", ""), expected):
         abort(400, "Форма застаріла, оновіть сторінку.")
 
 
@@ -89,8 +93,13 @@ PUBLIC = {"login", "static_file", "manifest", "service_worker"}
 
 @app.before_request
 def require_login():
-    if request.endpoint not in PUBLIC and "user" not in session:
+    if request.endpoint not in PUBLIC and session.get("user") not in LOGINS:
         return redirect(url_for("login"))
+
+
+def me():
+    """Людина в обліку, яка зараз увійшла: Оля або Марко."""
+    return LOGINS[session["user"]]
 
 
 @app.after_request
@@ -129,8 +138,8 @@ input, select {{ font:inherit; font-size:1.05rem; width:100%; padding:12px 14px;
 
 
 def nav():
-    return f"""<nav class="nav"><a class="btn" href="{url_for('add')}">+ Готівка</a>
-<a class="btn ghost" href="/fava/">Fava</a>
+    return f"""<nav class="nav"><span class="user">{me()}</span><a class="btn" href="{url_for('add')}">+ Готівка</a>
+<a class="btn ghost" href="{url_for('limits')}">Ліміти</a>
 <form method="post" action="{url_for('logout')}"><input type="hidden" name="csrf" value="{csrf_token()}">
 <button class="btn ghost" type="submit">Вийти</button></form></nav>"""
 
@@ -144,7 +153,7 @@ def login():
         if locked(ip):
             error = "Забагато невдалих спроб. Спробуйте за 5 хвилин."
         else:
-            name = request.form.get("login", "").strip()
+            name = request.form.get("login", "").strip().lower()
             stored = USERS.get(name)
             ok = check_password_hash(stored or DUMMY_HASH, request.form.get("password", ""))
             if stored and ok:
@@ -156,7 +165,7 @@ def login():
             note_fail(ip)
             error = "Неправильний логін або пароль."
     if not USERS:
-        error = "Вхід ще не налаштовано: на сервері немає TRACKER_USERS."
+        error = "Вхід ще не налаштовано: на сервері немає хешів паролів (make_env.py)."
     return page("Вхід", f"""
 <header><h1>Наші фінанси</h1></header>
 <section class="card"><form method="post">
@@ -180,7 +189,7 @@ def index():
     flash = ""
     if "added" in session:
         flash = escape(session.pop("added"))
-    return report.render(LEDGER, head=HEAD, nav=nav(), flash=flash)
+    return report.render(LEDGER, head=HEAD, nav=nav(), flash=flash, viewer=me(), settings_url=url_for("limits"))
 
 
 def expense_accounts():
@@ -195,9 +204,9 @@ def expense_accounts():
 
 @app.route("/add", methods=["GET", "POST"])
 def add():
-    accounts = expense_accounts()
+    accounts = expense_accounts()[me()]
     today = datetime.now(WARSAW).date()
-    form = {"person": "Марко", "date": today.isoformat(), "amount": "", "account": "", "description": ""}
+    form = {"date": today.isoformat(), "amount": "", "account": "", "description": "", "shared": "ні"}
     error = ""
     if request.method == "POST":
         check_csrf()
@@ -212,59 +221,47 @@ def add():
             except ValueError as e:
                 error = str(e)
             else:
-                session["added"] = f"Додано: {entry['description']}, {report.zl(entry['amount'])} ({entry['person']})."
+                kind = "спільна" if entry["shared"] else "особиста"
+                session["added"] = f"Додано: {entry['description']}, {report.zl(entry['amount'])} ({kind})."
                 return redirect(f"{url_for('index')}?p={entry['person']}&m={entry['date']:%Y-%m}")
-    people = "".join(
-        f'<label><input type="radio" name="person" value="{p}"{" checked" if p == form["person"] else ""}><span>{p}</span></label>'
-        for p in report.PEOPLE
+    options = "".join(
+        f'<option value="{a}"{" selected" if a == form["account"] else ""}>{report.category_name(a.rsplit(":", 1)[1])}</option>'
+        for a in accounts
     )
-    groups = "".join(
-        f'<optgroup label="{p}" data-p="{p}">'
-        + "".join(
-            f'<option value="{a}"{" selected" if a == form["account"] else ""}>{report.category_name(a.rsplit(":", 1)[1])}</option>'
-            for a in accounts[p]
-        )
-        + "</optgroup>"
-        for p in report.PEOPLE
+    shared = "".join(
+        f'<label><input type="radio" name="shared" value="{v}"{" checked" if v == form["shared"] else ""}><span>{label}</span></label>'
+        for v, label in (("ні", "Особиста"), ("так", "Спільна"))
     )
     return page("Додати готівку", f"""
 <header><h1>Готівка</h1><nav class="nav"><a class="btn ghost" href="{url_for('index')}">До звіту</a></nav></header>
-<section class="card"><form method="post" id="cash">
+<section class="card"><form method="post">
 <input type="hidden" name="csrf" value="{csrf_token()}">
 {f'<p class="error" role="alert">{escape(error)}</p>' if error else ''}
-<div class="field"><span>Хто платив</span><div class="radios">{people}</div></div>
 <label class="field"><span>Сума, зл</span><input name="amount" inputmode="decimal" placeholder="12,50" value="{escape(form['amount'])}" required autofocus></label>
 <label class="field"><span>Що купили</span><input name="description" maxlength="80" placeholder="Кава на ринку" value="{escape(form['description'])}" required></label>
-<label class="field"><span>Категорія</span><select name="account" required>{groups}</select></label>
+<label class="field"><span>Категорія</span><select name="account" required>{options}</select></label>
 <label class="field"><span>Дата</span><input name="date" type="date" min="2026-08-01" max="{today + timedelta(days=1)}" value="{escape(form['date'])}" required></label>
+<div class="field"><span>Хто бачить</span><div class="radios">{shared}</div></div>
 <button class="btn wide" type="submit">Зберегти</button>
 </form></section>
-<p class="foot">Запис потрапляє в cash.beancount і одразу видно у звіті, у Fava та в bean-check.</p>
-<script>
-// Показуємо лише категорії того, хто платив.
-const f = document.getElementById('cash'), sel = f.account;
-function sync() {{
-  const p = f.person.value;
-  sel.querySelectorAll('optgroup').forEach(g => {{ g.hidden = g.disabled = g.dataset.p !== p; }});
-  if (sel.selectedOptions[0]?.parentElement.dataset.p !== p) sel.value = sel.querySelector(`optgroup[data-p="${{p}}"] option`).value;
-}}
-f.querySelectorAll('[name=person]').forEach(r => r.addEventListener('change', sync));
-sync();
-</script>""")
+<p class="foot">Платить {me()}. Особисту витрату бачите лише ви, спільну — обоє.</p>""")
+
+
+def money(text):
+    """«1 234,50» -> Decimal("1234.50"); ValueError, якщо це не число."""
+    try:
+        value = Decimal(text.replace("\xa0", "").replace(" ", "").replace(",", ".")).quantize(Decimal("0.01"))
+    except InvalidOperation:
+        raise ValueError("Сума має бути числом, наприклад 12,50.") from None
+    return value
 
 
 def parse_cash(form, accounts, today):
     """Перевіряє поля форми. Повертає запис або кидає ValueError з поясненням для людини."""
-    person = form["person"]
-    if person not in accounts:
-        raise ValueError("Оберіть, хто платив.")
-    try:
-        amount = Decimal(form["amount"].replace(" ", "").replace(",", ".")).quantize(Decimal("0.01"))
-    except InvalidOperation:
-        raise ValueError("Сума має бути числом, наприклад 12,50.") from None
+    amount = money(form["amount"])
     if not Decimal("0.01") <= amount <= Decimal("100000"):
         raise ValueError("Сума має бути від 0,01 до 100 000 зл.")
-    if form["account"] not in accounts[person]:
+    if form["account"] not in accounts:
         raise ValueError("Оберіть категорію.")
     try:
         day = date.fromisoformat(form["date"])
@@ -275,8 +272,65 @@ def parse_cash(form, accounts, today):
     description = re.sub(r'[\s"\\]+', " ", form["description"]).strip()[:80]
     if not description:
         raise ValueError("Напишіть, що купили.")
-    return {"person": person, "amount": amount, "account": form["account"], "date": day,
-            "description": description, "user": session["user"]}
+    if form["shared"] not in ("так", "ні"):
+        raise ValueError("Оберіть, хто бачить витрату.")
+    return {"person": me(), "amount": amount, "account": form["account"], "date": day,
+            "description": description, "user": session["user"], "shared": form["shared"] == "так"}
+
+
+@app.route("/limits", methods=["GET", "POST"])
+def limits():
+    """Ліміти на місяць для своїх категорій. Чужі рядки limits.csv не показуємо і не змінюємо."""
+    accounts = expense_accounts()[me()]
+    current = report.load_limits()
+    values = {a: f"{current[a]:f}".replace(".", ",") if a in current else "" for a in accounts}
+    error = ""
+    if request.method == "POST":
+        check_csrf()
+        values = {a: request.form.get(a, "").strip() for a in accounts}
+        try:
+            mine = {}
+            for a, text in values.items():
+                if text:
+                    mine[a] = money(text)
+                    if not Decimal("1") <= mine[a] <= Decimal("1000000"):
+                        raise ValueError("Ліміт має бути від 1 до 1 000 000 зл або порожнім.")
+        except ValueError as e:
+            error = str(e)
+        else:
+            save_limits(mine)
+            session["added"] = "Ліміти збережено."
+            return redirect(url_for("index"))
+    fields = "".join(
+        f'<label class="field"><span>{report.category_name(a.rsplit(":", 1)[1])}</span>'
+        f'<input name="{a}" inputmode="decimal" placeholder="без ліміту" value="{escape(values[a])}"></label>'
+        for a in accounts
+    )
+    return page("Ліміти", f"""
+<header><h1>Ліміти</h1><nav class="nav"><a class="btn ghost" href="{url_for('index')}">До звіту</a></nav></header>
+<section class="card"><form method="post">
+<input type="hidden" name="csrf" value="{csrf_token()}">
+{f'<p class="error" role="alert">{escape(error)}</p>' if error else ''}
+<p class="foot">Скільки {me()} готові витрачати на місяць, зл. Порожнє поле — без ліміту.</p>
+{fields}
+<button class="btn wide" type="submit">Зберегти</button>
+</form></section>""")
+
+
+def save_limits(mine):
+    """Переписує свої рядки limits.csv, чужі лишає як були. Блокування — на випадок двох збережень одночасно."""
+    with open(report.LIMITS, "a+", encoding="utf-8") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        f.seek(0)
+        rows = {r["рахунок"]: r["ліміт"] for r in csv.DictReader(f) if report.owner(r["рахунок"]) != me()}
+        rows.update({a: f"{v:f}" for a, v in mine.items()})
+        out = io.StringIO()
+        writer = csv.writer(out, lineterminator="\n")
+        writer.writerow(["рахунок", "ліміт"])
+        writer.writerows(sorted(rows.items()))
+        f.seek(0)
+        f.truncate()
+        f.write(out.getvalue())
 
 
 # ----- Файли для встановлення на телефон (без даних, доступні без входу) -----
@@ -295,19 +349,6 @@ def service_worker():
     response = send_from_directory(STATIC, "sw.js", mimetype="text/javascript", max_age=0)
     response.headers["Service-Worker-Allowed"] = "/"
     return response
-
-
-# ----- Fava за /fava/, лише після входу -----
-fava = create_fava([str(LEDGER)], load=True, poll_watcher=True)
-
-
-def fava_guard(environ, start_response):
-    with app.request_context(environ):
-        logged_in = "user" in session
-    if not logged_in:
-        start_response("302 Found", [("Location", "/login"), ("Cache-Control", "no-store")])
-        return [b""]
-    return fava(environ, start_response)
 
 
 def https_only(wsgi):
@@ -335,4 +376,4 @@ def https_only(wsgi):
 
 
 # PythonAnywhere стоїть перед застосунком як проксі і передає справжню схему в X-Forwarded-Proto.
-application = ProxyFix(https_only(DispatcherMiddleware(app.wsgi_app, {"/fava": fava_guard})), x_proto=1, x_for=1)
+application = ProxyFix(https_only(app.wsgi_app), x_proto=1, x_for=1)

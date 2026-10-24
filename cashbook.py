@@ -20,7 +20,7 @@ def ensure(path):
 
 def text(entry):
     return (
-        f'\n{entry["date"]} * "{entry["description"]}" #cash\n'
+        f'\n{entry["date"]} * "{entry["description"]}" #cash{" #shared" if entry["shared"] else ""}\n'
         f'  added_by: "{entry["user"]}"\n'
         f'  {entry["account"]}  {entry["amount"]:.2f} PLN\n'
         f'  Assets:{entry["person"]}:Готівка\n'
